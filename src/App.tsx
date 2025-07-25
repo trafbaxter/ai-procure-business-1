@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { UserProvider } from "@/contexts/UserContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import SessionTimeout from "@/components/SessionTimeout";
 import LoginForm from "@/components/LoginForm";
 import ResetPassword from "@/pages/ResetPassword";
 import Index from "./pages/Index";
@@ -24,6 +25,7 @@ const App = () => (
           <TooltipProvider>
             <Toaster />
             <Sonner />
+            <SessionTimeout />
             <BrowserRouter>
               <Routes>
                 <Route path="/login" element={<LoginForm />} />

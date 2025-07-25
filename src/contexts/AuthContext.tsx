@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
+import { hashPassword, verifyPassword } from '@/utils/encryption';
+import { createSession, validateSession, clearSession, refreshSession } from '@/utils/sessionManager';
 
 interface User {
   id: string;
@@ -36,9 +38,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     // Check for existing session
-    const savedUser = localStorage.getItem('auth_user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
+    const session = validateSession();
+    if (session) {
+      const storedUsers = JSON.parse(localStorage.getItem('app_users') || '[]');
+      const foundUser = storedUsers.find((u: any) => u.id === session.userId) || 
+        (session.userId === '1' ? { id: '1', name: 'Admin User', email: 'admin@company.com', role: 'admin' } : null);
+      
+      if (foundUser) {
+        setUser(foundUser);
+        refreshSession(); // Extend session
+      } else {
+        clearSession();
+      }
     }
     setIsLoading(false);
   }, []);
@@ -46,20 +57,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     try {
-      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      if (email === 'admin@company.com' && password === 'admin123') {
-        const userData = {
-          id: '1',
-          name: 'Admin User',
-          email: 'admin@company.com',
-          role: 'admin' as const
-        };
-        setUser(userData);
-        localStorage.setItem('auth_user', JSON.stringify(userData));
-        toast({ title: 'Login successful' });
-        return true;
+      const storedCredentials = JSON.parse(localStorage.getItem('user_credentials') || '{}');
+      const storedUsers = JSON.parse(localStorage.getItem('app_users') || '[]');
+      
+      // Check hardcoded admin with hashed password
+      if (email === 'admin@company.com') {
+        const adminHash = hashPassword('admin123');
+        if (verifyPassword(password, adminHash)) {
+          const userData = { id: '1', name: 'Admin User', email: 'admin@company.com', role: 'admin' as const };
+          setUser(userData);
+          createSession(userData.id, userData.email);
+          toast({ title: 'Login successful' });
+          return true;
+        }
+      }
+      
+      // Check created users with hashed passwords
+      const foundUser = storedUsers.find((u: any) => u.email === email);
+      if (foundUser && storedCredentials[foundUser.id]) {
+        if (verifyPassword(password, storedCredentials[foundUser.id])) {
+          const userData = { id: foundUser.id, name: foundUser.name, email: foundUser.email, role: foundUser.role };
+          setUser(userData);
+          createSession(userData.id, userData.email);
+          toast({ title: 'Login successful' });
+          return true;
+        }
       }
       
       toast({ title: 'Invalid credentials', variant: 'destructive' });
@@ -75,7 +99,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loginWithOAuth = async (provider: 'google' | 'github'): Promise<boolean> => {
     setIsLoading(true);
     try {
-      // Simulate OAuth flow
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       const userData = {
@@ -87,7 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
       
       setUser(userData);
-      localStorage.setItem('auth_user', JSON.stringify(userData));
+      createSession(userData.id, userData.email);
       toast({ title: `${provider} login successful` });
       return true;
     } catch (error) {
@@ -100,7 +123,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetPassword = async (email: string): Promise<boolean> => {
     try {
-      // Simulate sending reset email
       await new Promise(resolve => setTimeout(resolve, 1500));
       return true;
     } catch (error) {
@@ -110,7 +132,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const updatePassword = async (token: string, newPassword: string): Promise<boolean> => {
     try {
-      // Simulate password update
       await new Promise(resolve => setTimeout(resolve, 2000));
       return true;
     } catch (error) {
@@ -120,7 +141,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('auth_user');
+    clearSession();
     toast({ title: 'Logged out successfully' });
   };
 

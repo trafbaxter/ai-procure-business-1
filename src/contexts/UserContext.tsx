@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, CreateUserData } from '@/types/user';
 import { toast } from '@/components/ui/use-toast';
+import { hashPassword } from '@/utils/encryption';
 
 interface UserContextType {
   users: User[];
@@ -32,17 +33,36 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     status: 'active'
   });
 
-  const [users, setUsers] = useState<User[]>([
-    currentUser,
-    {
-      id: '2',
-      name: 'John Doe',
-      email: 'john@company.com',
-      role: 'user',
-      createdAt: new Date(),
-      status: 'active'
+  const [users, setUsers] = useState<User[]>([]);
+
+  // Load users from localStorage on mount
+  useEffect(() => {
+    const storedUsers = localStorage.getItem('app_users');
+    if (storedUsers) {
+      const parsedUsers = JSON.parse(storedUsers).map((user: any) => ({
+        ...user,
+        createdAt: new Date(user.createdAt)
+      }));
+      setUsers([currentUser, ...parsedUsers.filter((u: User) => u.id !== currentUser.id)]);
+    } else {
+      setUsers([
+        currentUser,
+        {
+          id: '2',
+          name: 'John Doe',
+          email: 'john@company.com',
+          role: 'user',
+          createdAt: new Date(),
+          status: 'active'
+        }
+      ]);
     }
-  ]);
+  }, []);
+
+  // Save users to localStorage whenever users change
+  useEffect(() => {
+    localStorage.setItem('app_users', JSON.stringify(users));
+  }, [users]);
 
   const createUser = (userData: CreateUserData) => {
     const newUser: User = {
@@ -61,6 +81,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
     setUsers(prev => prev.filter(user => user.id !== userId));
+    
+    // Also remove stored password
+    const credentials = JSON.parse(localStorage.getItem('user_credentials') || '{}');
+    delete credentials[userId];
+    localStorage.setItem('user_credentials', JSON.stringify(credentials));
+    
     toast({ title: 'User removed successfully' });
   };
 
@@ -76,18 +102,24 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // In a real app, this would make an API call to update the password
-      // For now, we'll simulate success/failure
       const user = users.find(u => u.id === userId);
       if (!user) {
         throw new Error('User not found');
       }
       
-      // Simulate successful password update
-      console.log(`Password updated for user ${userId}: ${password}`);
+      // Hash password before storing
+      const hashedPassword = hashPassword(password);
+      
+      // Store hashed password in localStorage
+      const credentials = JSON.parse(localStorage.getItem('user_credentials') || '{}');
+      credentials[userId] = hashedPassword;
+      localStorage.setItem('user_credentials', JSON.stringify(credentials));
+      
+      toast({ title: 'Password set successfully' });
       
     } catch (error) {
       console.error('Failed to set password:', error);
+      toast({ title: 'Failed to set password', variant: 'destructive' });
       throw error;
     }
   };
