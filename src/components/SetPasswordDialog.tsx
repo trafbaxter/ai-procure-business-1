@@ -9,7 +9,7 @@ import { User } from '@/types/user';
 
 interface SetPasswordDialogProps {
   user: User;
-  onPasswordSet: (userId: string, newPassword: string) => void;
+  onPasswordSet: (userId: string, newPassword: string) => Promise<void>;
 }
 
 export const SetPasswordDialog: React.FC<SetPasswordDialogProps> = ({ user, onPasswordSet }) => {
@@ -42,7 +42,7 @@ export const SetPasswordDialog: React.FC<SetPasswordDialogProps> = ({ user, onPa
 
     setIsLoading(true);
     try {
-      onPasswordSet(user.id, password);
+      await onPasswordSet(user.id, password);
       toast({
         title: 'Password Updated',
         description: `Password has been set for ${user.name}.`,
@@ -61,8 +61,16 @@ export const SetPasswordDialog: React.FC<SetPasswordDialogProps> = ({ user, onPa
     }
   };
 
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      setPassword('');
+      setConfirmPassword('');
+    }
+    setOpen(newOpen);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="flex items-center gap-2">
           <Key className="h-4 w-4" />
@@ -84,6 +92,7 @@ export const SetPasswordDialog: React.FC<SetPasswordDialogProps> = ({ user, onPa
               placeholder="Enter new password"
               required
               minLength={6}
+              disabled={isLoading}
             />
           </div>
           <div className="space-y-2">
@@ -96,10 +105,11 @@ export const SetPasswordDialog: React.FC<SetPasswordDialogProps> = ({ user, onPa
               placeholder="Confirm new password"
               required
               minLength={6}
+              disabled={isLoading}
             />
           </div>
           <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isLoading}>
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>

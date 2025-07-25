@@ -8,7 +8,7 @@ interface UserContextType {
   createUser: (userData: CreateUserData) => void;
   removeUser: (userId: string) => void;
   updateUserRole: (userId: string, role: 'admin' | 'user') => void;
-  setUserPassword: (userId: string, password: string) => void;
+  setUserPassword: (userId: string, password: string) => Promise<void>;
   isAdmin: () => boolean;
 }
 
@@ -71,12 +71,24 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     toast({ title: 'User role updated successfully' });
   };
 
-  const setUserPassword = (userId: string, password: string) => {
-    // In a real app, this would make an API call to update the password
-    // For now, we'll just show a success message
-    const user = users.find(u => u.id === userId);
-    if (user) {
-      toast({ title: `Password updated for ${user.name}` });
+  const setUserPassword = async (userId: string, password: string) => {
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // In a real app, this would make an API call to update the password
+      // For now, we'll simulate success/failure
+      const user = users.find(u => u.id === userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+      
+      // Simulate successful password update
+      console.log(`Password updated for user ${userId}: ${password}`);
+      
+    } catch (error) {
+      console.error('Failed to set password:', error);
+      throw error;
     }
   };
 

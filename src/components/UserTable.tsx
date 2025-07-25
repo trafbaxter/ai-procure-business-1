@@ -14,8 +14,8 @@ export const UserTable: React.FC = () => {
     updateUserRole(userId, newRole);
   };
 
-  const handlePasswordSet = (userId: string, newPassword: string) => {
-    setUserPassword(userId, newPassword);
+  const handlePasswordSet = async (userId: string, newPassword: string) => {
+    await setUserPassword(userId, newPassword);
   };
 
   return (
