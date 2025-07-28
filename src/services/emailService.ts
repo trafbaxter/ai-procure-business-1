@@ -42,6 +42,7 @@ class EmailService {
       userId
     });
 
+    console.log(`🔑 Generated reset token for ${email}: ${token}`);
     return token;
   }
 
@@ -49,19 +50,23 @@ class EmailService {
     const tokenData = this.resetTokens.get(token);
     
     if (!tokenData) {
+      console.log(`❌ Token not found: ${token}`);
       return null;
     }
 
     if (Date.now() > tokenData.expiresAt) {
       this.resetTokens.delete(token);
+      console.log(`⏰ Token expired: ${token}`);
       return null;
     }
 
+    console.log(`✅ Token valid: ${token}`);
     return tokenData;
   }
 
   consumeResetToken(token: string): void {
     this.resetTokens.delete(token);
+    console.log(`🗑️ Token consumed: ${token}`);
   }
 
   private async sendEmailWithSES(emailTemplate: EmailTemplate): Promise<boolean> {
@@ -94,6 +99,7 @@ class EmailService {
       });
 
       await this.sesClient.send(command);
+      console.log(`📧 AWS SES email sent to: ${emailTemplate.to}`);
       return true;
     } catch (error) {
       console.error('AWS SES Error:', error);
@@ -105,7 +111,19 @@ class EmailService {
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      console.log('📧 Mock Email Sent:', emailTemplate);
+      console.log('📧 Mock Email Sent:', {
+        to: emailTemplate.to,
+        subject: emailTemplate.subject,
+        html: emailTemplate.html.substring(0, 200) + '...',
+        text: emailTemplate.text.substring(0, 200) + '...'
+      });
+      
+      // Extract reset URL from email content for easy access
+      const resetUrlMatch = emailTemplate.html.match(/href="([^"]*reset-password[^"]*)"/);
+      if (resetUrlMatch) {
+        console.log('🔗 RESET LINK:', resetUrlMatch[1]);
+        console.log('👆 Click this link to reset your password!');
+      }
       
       const sentEmails = JSON.parse(localStorage.getItem('demo_sent_emails') || '[]');
       sentEmails.push({
@@ -123,6 +141,9 @@ class EmailService {
 
   async sendPasswordResetEmail(email: string, resetToken: string): Promise<boolean> {
     const resetUrl = `${window.location.origin}/reset-password?token=${resetToken}`;
+    
+    console.log(`📨 Sending password reset email to: ${email}`);
+    console.log(`🔗 Reset URL: ${resetUrl}`);
     
     const emailTemplate: EmailTemplate = {
       to: email,
@@ -156,7 +177,7 @@ class EmailService {
     if (isAwsConfigured()) {
       return await this.sendEmailWithSES(emailTemplate);
     } else {
-      console.warn('AWS SES not configured, using mock email service');
+      console.warn('⚠️ AWS SES not configured, using mock email service');
       return await this.sendEmailMock(emailTemplate);
     }
   }
