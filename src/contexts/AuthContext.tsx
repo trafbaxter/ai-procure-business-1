@@ -87,10 +87,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
       
-      toast({ title: 'Invalid credentials', variant: 'destructive' });
+      toast({ 
+        title: 'Invalid credentials', 
+        description: 'Please check your email and password and try again.',
+        variant: 'destructive' 
+      });
       return false;
     } catch (error) {
-      toast({ title: 'Login failed', variant: 'destructive' });
+      toast({ 
+        title: 'Login failed', 
+        description: 'An error occurred while trying to log in. Please try again.',
+        variant: 'destructive' 
+      });
       return false;
     } finally {
       setIsLoading(false);
@@ -124,23 +132,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetPassword = async (email: string): Promise<boolean> => {
     try {
-      // Check if user exists
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return false;
+      }
+
+      // Check if user exists (but don't reveal this information)
       const storedUsers = JSON.parse(localStorage.getItem('app_users') || '[]');
       const foundUser = storedUsers.find((u: any) => u.email === email) || 
         (email === 'admin@company.com' ? { id: '1', email: 'admin@company.com' } : null);
       
-      if (!foundUser) {
-        // Don't reveal whether email exists for security
-        return true;
+      // Always generate token and attempt to send email for security
+      // (Don't reveal whether the email exists or not)
+      if (foundUser) {
+        const resetToken = emailService.generateResetToken(email, foundUser.id);
+        const emailSent = await emailService.sendPasswordResetEmail(email, resetToken);
+        return emailSent;
       }
-
-      // Generate reset token
-      const resetToken = emailService.generateResetToken(email, foundUser.id);
       
-      // Send reset email
-      const emailSent = await emailService.sendPasswordResetEmail(email, resetToken);
-      
-      return emailSent;
+      // For non-existent users, simulate the process but don't actually send email
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return true; // Always return true for security (don't reveal if email exists)
     } catch (error) {
       console.error('Reset password error:', error);
       return false;
@@ -163,7 +176,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       storedCredentials[tokenData.userId] = hashedPassword;
       localStorage.setItem('user_credentials', JSON.stringify(storedCredentials));
       
-      // Consume the token
+      // Consume the token (one-time use)
       emailService.consumeResetToken(token);
       
       return true;
