@@ -47,20 +47,13 @@ const ForgotPasswordDialog = ({ children }: ForgotPasswordDialogProps) => {
         setEmailSent(true);
         toast({
           title: "Reset link sent",
-          description: "If an account with this email exists, you'll receive reset instructions.",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: "Unable to send reset email. Please try again later.",
-          variant: "destructive",
+          description: "Check your email for reset instructions.",
         });
       }
     } catch (error) {
-      console.error('Reset password error:', error);
       toast({
         title: "Error",
-        description: "Unable to send reset email. Please try again later.",
+        description: "Unable to send reset email. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -75,13 +68,7 @@ const ForgotPasswordDialog = ({ children }: ForgotPasswordDialogProps) => {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
-      setIsOpen(open);
-      if (!open) {
-        setEmailSent(false);
-        setEmail('');
-      }
-    }}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
@@ -101,19 +88,17 @@ const ForgotPasswordDialog = ({ children }: ForgotPasswordDialogProps) => {
             )}
           </DialogTitle>
           <DialogDescription>
-            {emailSent ? (
-              "Check your email for password reset instructions. The link will expire in 24 hours."
-            ) : (
-              "Enter your email address and we'll send you a link to reset your password."
-            )}
+            {emailSent 
+              ? "Check your email for password reset instructions."
+              : "Enter your email address to receive reset instructions."
+            }
           </DialogDescription>
         </DialogHeader>
         
         {emailSent ? (
           <div className="space-y-4">
             <div className="text-center text-sm text-muted-foreground">
-              <p>Reset link sent to:</p>
-              <p className="font-medium">{email}</p>
+              <p>Reset link sent to: <span className="font-medium">{email}</span></p>
             </div>
             <Button onClick={handleClose} className="w-full">
               Close
@@ -144,9 +129,7 @@ const ForgotPasswordDialog = ({ children }: ForgotPasswordDialogProps) => {
                 Cancel
               </Button>
               <Button type="submit" className="flex-1" disabled={isLoading || !email.trim()}>
-                {isLoading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : null}
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Send Reset Link
               </Button>
             </div>
