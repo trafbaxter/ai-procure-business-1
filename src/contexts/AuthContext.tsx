@@ -88,15 +88,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       toast({ 
-        title: 'Invalid credentials', 
-        description: 'Please check your email and password and try again.',
+        title: 'Login failed', 
+        description: 'Invalid email or password. Please check your credentials and try again.',
         variant: 'destructive' 
       });
       return false;
     } catch (error) {
       toast({ 
-        title: 'Login failed', 
-        description: 'An error occurred while trying to log in. Please try again.',
+        title: 'Login error', 
+        description: 'An error occurred during login. Please try again.',
         variant: 'destructive' 
       });
       return false;
@@ -132,41 +132,80 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetPassword = async (email: string): Promise<boolean> => {
     try {
+      console.log('Reset password requested for:', email);
+      
       // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
+        console.error('Invalid email format:', email);
+        toast({
+          title: 'Invalid email',
+          description: 'Please enter a valid email address.',
+          variant: 'destructive'
+        });
         return false;
       }
 
-      // Check if user exists (but don't reveal this information)
+      // Check if user exists
       const storedUsers = JSON.parse(localStorage.getItem('app_users') || '[]');
       const foundUser = storedUsers.find((u: any) => u.email === email) || 
         (email === 'admin@company.com' ? { id: '1', email: 'admin@company.com' } : null);
+      
+      console.log('User found for reset:', foundUser ? 'Yes' : 'No');
       
       // Always generate token and attempt to send email for security
       // (Don't reveal whether the email exists or not)
       if (foundUser) {
         const resetToken = emailService.generateResetToken(email, foundUser.id);
+        console.log('Generated reset token:', resetToken);
+        
         const emailSent = await emailService.sendPasswordResetEmail(email, resetToken);
-        return emailSent;
+        console.log('Email sent successfully:', emailSent);
+        
+        if (!emailSent) {
+          toast({
+            title: 'Email service error',
+            description: 'Unable to send reset email. Please try again later.',
+            variant: 'destructive'
+          });
+          return false;
+        }
+        
+        return true;
       }
       
       // For non-existent users, simulate the process but don't actually send email
+      console.log('Simulating reset for non-existent user');
       await new Promise(resolve => setTimeout(resolve, 1000));
       return true; // Always return true for security (don't reveal if email exists)
     } catch (error) {
       console.error('Reset password error:', error);
+      toast({
+        title: 'Reset failed',
+        description: 'An error occurred while processing your request. Please try again.',
+        variant: 'destructive'
+      });
       return false;
     }
   };
 
   const updatePassword = async (token: string, newPassword: string): Promise<boolean> => {
     try {
+      console.log('Updating password with token:', token);
+      
       // Validate token
       const tokenData = emailService.validateResetToken(token);
       if (!tokenData) {
+        console.error('Invalid or expired token');
+        toast({
+          title: 'Invalid reset link',
+          description: 'This reset link is invalid or has expired. Please request a new one.',
+          variant: 'destructive'
+        });
         return false;
       }
+
+      console.log('Token validated for user:', tokenData.userId);
 
       // Hash new password
       const hashedPassword = hashPassword(newPassword);
@@ -179,9 +218,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Consume the token (one-time use)
       emailService.consumeResetToken(token);
       
+      console.log('Password updated successfully');
       return true;
     } catch (error) {
       console.error('Update password error:', error);
+      toast({
+        title: 'Password update failed',
+        description: 'An error occurred while updating your password. Please try again.',
+        variant: 'destructive'
+      });
       return false;
     }
   };
