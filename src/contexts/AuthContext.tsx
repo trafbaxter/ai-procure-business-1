@@ -16,7 +16,6 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  loginWithOAuth: (provider: 'google' | 'github') => Promise<boolean>;
   logout: () => void;
   resetPassword: (email: string) => Promise<boolean>;
   updatePassword: (token: string, newPassword: string) => Promise<boolean>;
@@ -87,18 +86,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const loginWithOAuth = async (provider: 'google' | 'github'): Promise<boolean> => {
-    const userData = {
-      id: provider + '_123',
-      name: provider + ' User',
-      email: `user@${provider}.com`,
-      role: 'user' as const
-    };
-    setUser(userData);
-    createSession(userData.id, userData.email);
-    return true;
-  };
-
   const resetPassword = async (email: string): Promise<boolean> => {
     const storedUsers = JSON.parse(localStorage.getItem('app_users') || '[]');
     const foundUser = storedUsers.find((u: any) => u.email === email) || 
@@ -134,7 +121,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       user,
       isAuthenticated: !!user,
       login,
-      loginWithOAuth,
       logout,
       resetPassword,
       updatePassword,

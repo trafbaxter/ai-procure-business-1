@@ -11,15 +11,11 @@ import ForgotPasswordDialog from './ForgotPasswordDialog';
 const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login, loginWithOAuth, isLoading } = useAuth();
+  const { login, isLoading } = useAuth();
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     await login(email, password);
-  };
-
-  const handleOAuthLogin = async (provider: 'google' | 'github') => {
-    await loginWithOAuth(provider);
   };
 
   return (
@@ -32,41 +28,10 @@ const LoginForm = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => handleOAuthLogin('google')}
-              disabled={isLoading}
-            >
-              {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Continue with Google
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => handleOAuthLogin('github')}
-              disabled={isLoading}
-            >
-              {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Continue with GitHub
-            </Button>
-          </div>
-          
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <Separator className="w-full" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
-            </div>
-          </div>
-
           <form onSubmit={handleEmailLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
-                id="email"
                 type="email"
                 placeholder="admin@company.com"
                 value={email}
