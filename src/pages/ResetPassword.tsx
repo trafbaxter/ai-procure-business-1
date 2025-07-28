@@ -25,15 +25,23 @@ const ResetPassword = () => {
     // Validate token on component mount
     const validateToken = async () => {
       if (!token) {
+        console.log('❌ No token found in URL');
         setIsValidToken(false);
         return;
       }
 
+      console.log(`🔍 Validating token: ${token}`);
+      
+      // Debug: Check what tokens are stored
+      emailService.debugTokens();
+
       try {
         // Check if token is valid using email service
         const tokenData = emailService.validateResetToken(token);
+        console.log('🔍 Token validation result:', tokenData);
         setIsValidToken(!!tokenData);
       } catch (error) {
+        console.error('❌ Token validation error:', error);
         setIsValidToken(false);
       }
     };

@@ -16,8 +16,8 @@ export interface ResetTokenData {
 }
 
 class EmailService {
-  private resetTokens: Map<string, ResetTokenData> = new Map();
   private sesClient: SESClient | null = null;
+  private readonly RESET_TOKENS_KEY = 'password_reset_tokens';
 
   constructor() {
     if (isAwsConfigured()) {
@@ -31,23 +31,44 @@ class EmailService {
     }
   }
 
+  private getResetTokens(): Map<string, ResetTokenData> {
+    const stored = localStorage.getItem(this.RESET_TOKENS_KEY);
+    if (!stored) return new Map();
+    
+    try {
+      const tokenArray = JSON.parse(stored);
+      return new Map(tokenArray);
+    } catch {
+      return new Map();
+    }
+  }
+
+  private saveResetTokens(tokens: Map<string, ResetTokenData>): void {
+    const tokenArray = Array.from(tokens.entries());
+    localStorage.setItem(this.RESET_TOKENS_KEY, JSON.stringify(tokenArray));
+  }
+
   generateResetToken(email: string, userId: string): string {
     const token = crypto.randomUUID();
     const expiresAt = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
     
-    this.resetTokens.set(token, {
+    const tokens = this.getResetTokens();
+    tokens.set(token, {
       token,
       email,
       expiresAt,
       userId
     });
+    this.saveResetTokens(tokens);
 
     console.log(`🔑 Generated reset token for ${email}: ${token}`);
+    console.log(`📅 Token expires at: ${new Date(expiresAt).toLocaleString()}`);
     return token;
   }
 
   validateResetToken(token: string): ResetTokenData | null {
-    const tokenData = this.resetTokens.get(token);
+    const tokens = this.getResetTokens();
+    const tokenData = tokens.get(token);
     
     if (!tokenData) {
       console.log(`❌ Token not found: ${token}`);
@@ -55,17 +76,20 @@ class EmailService {
     }
 
     if (Date.now() > tokenData.expiresAt) {
-      this.resetTokens.delete(token);
+      tokens.delete(token);
+      this.saveResetTokens(tokens);
       console.log(`⏰ Token expired: ${token}`);
       return null;
     }
 
-    console.log(`✅ Token valid: ${token}`);
+    console.log(`✅ Token valid: ${token} for user ${tokenData.email}`);
     return tokenData;
   }
 
   consumeResetToken(token: string): void {
-    this.resetTokens.delete(token);
+    const tokens = this.getResetTokens();
+    tokens.delete(token);
+    this.saveResetTokens(tokens);
     console.log(`🗑️ Token consumed: ${token}`);
   }
 
@@ -188,6 +212,17 @@ class EmailService {
 
   clearSentEmails(): void {
     localStorage.removeItem('demo_sent_emails');
+  }
+
+  // Debug method to check stored tokens
+  debugTokens(): void {
+    const tokens = this.getResetTokens();
+    console.log('🔍 Stored reset tokens:', Array.from(tokens.entries()).map(([token, data]) => ({
+      token: token.substring(0, 8) + '...',
+      email: data.email,
+      expiresAt: new Date(data.expiresAt).toLocaleString(),
+      expired: Date.now() > data.expiresAt
+    })));
   }
 }
 
