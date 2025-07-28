@@ -1,29 +1,38 @@
 // AWS Configuration
 export const AWS_CONFIG = {
-  region: process.env.VITE_AWS_REGION || 'us-east-1',
-  accessKeyId: process.env.VITE_AWS_ACCESS_KEY_ID || '',
-  secretAccessKey: process.env.VITE_AWS_SECRET_ACCESS_KEY || '',
-  sesFromEmail: process.env.VITE_SES_FROM_EMAIL || 'noreply@yourcompany.com',
-  sesFromName: process.env.VITE_SES_FROM_NAME || 'Procurement System'
+  region: import.meta.env.VITE_AWS_REGION || 'us-east-1',
+  accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID || '',
+  secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY || '',
+  sesFromEmail: import.meta.env.VITE_SES_FROM_EMAIL || 'noreply@yourcompany.com',
+  sesFromName: import.meta.env.VITE_SES_FROM_NAME || 'Procurement System'
 };
 
 // Validate AWS configuration
 export const isAwsConfigured = (): boolean => {
-  const configured = !!(
-    AWS_CONFIG.accessKeyId && 
-    AWS_CONFIG.secretAccessKey && 
-    AWS_CONFIG.sesFromEmail &&
-    AWS_CONFIG.accessKeyId !== '' &&
-    AWS_CONFIG.secretAccessKey !== ''
-  );
+  const hasAccessKey = !!(AWS_CONFIG.accessKeyId && AWS_CONFIG.accessKeyId.trim() !== '');
+  const hasSecretKey = !!(AWS_CONFIG.secretAccessKey && AWS_CONFIG.secretAccessKey.trim() !== '');
+  const hasFromEmail = !!(AWS_CONFIG.sesFromEmail && AWS_CONFIG.sesFromEmail.trim() !== '');
   
-  console.log('AWS Configuration Check:', {
-    hasAccessKey: !!AWS_CONFIG.accessKeyId && AWS_CONFIG.accessKeyId !== '',
-    hasSecretKey: !!AWS_CONFIG.secretAccessKey && AWS_CONFIG.secretAccessKey !== '',
-    hasFromEmail: !!AWS_CONFIG.sesFromEmail,
+  const configured = hasAccessKey && hasSecretKey && hasFromEmail;
+  
+  console.log('🔧 AWS Configuration Check:', {
+    hasAccessKey,
+    hasSecretKey, 
+    hasFromEmail,
     region: AWS_CONFIG.region,
-    configured
+    fromEmail: AWS_CONFIG.sesFromEmail,
+    configured,
+    // Show first few chars of keys for debugging (safely)
+    accessKeyPreview: AWS_CONFIG.accessKeyId ? AWS_CONFIG.accessKeyId.substring(0, 4) + '...' : 'NOT SET',
+    secretKeyPreview: AWS_CONFIG.secretAccessKey ? AWS_CONFIG.secretAccessKey.substring(0, 4) + '...' : 'NOT SET'
   });
+  
+  if (!configured) {
+    console.warn('⚠️ AWS SES not fully configured. Missing:');
+    if (!hasAccessKey) console.warn('  - VITE_AWS_ACCESS_KEY_ID');
+    if (!hasSecretKey) console.warn('  - VITE_AWS_SECRET_ACCESS_KEY');
+    if (!hasFromEmail) console.warn('  - VITE_SES_FROM_EMAIL');
+  }
   
   return configured;
 };
