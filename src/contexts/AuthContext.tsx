@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { hashPassword, verifyPassword } from '@/utils/encryption';
 import { createSession, validateSession, clearSession, refreshSession } from '@/utils/sessionManager';
+import { emailService } from '@/services/emailService';
 
 interface User {
   id: string;
@@ -123,18 +124,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetPassword = async (email: string): Promise<boolean> => {
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      return true;
+      // Check if user exists
+      const storedUsers = JSON.parse(localStorage.getItem('app_users') || '[]');
+      const foundUser = storedUsers.find((u: any) => u.email === email) || 
+        (email === 'admin@company.com' ? { id: '1', email: 'admin@company.com' } : null);
+      
+      if (!foundUser) {
+        // Don't reveal whether email exists for security
+        return true;
+      }
+
+      // Generate reset token
+      const resetToken = emailService.generateResetToken(email, foundUser.id);
+      
+      // Send reset email
+      const emailSent = await emailService.sendPasswordResetEmail(email, resetToken);
+      
+      return emailSent;
     } catch (error) {
+      console.error('Reset password error:', error);
       return false;
     }
   };
 
   const updatePassword = async (token: string, newPassword: string): Promise<boolean> => {
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Validate token
+      const tokenData = emailService.validateResetToken(token);
+      if (!tokenData) {
+        return false;
+      }
+
+      // Hash new password
+      const hashedPassword = hashPassword(newPassword);
+      
+      // Update password in storage
+      const storedCredentials = JSON.parse(localStorage.getItem('user_credentials') || '{}');
+      storedCredentials[tokenData.userId] = hashedPassword;
+      localStorage.setItem('user_credentials', JSON.stringify(storedCredentials));
+      
+      // Consume the token
+      emailService.consumeResetToken(token);
+      
       return true;
     } catch (error) {
+      console.error('Update password error:', error);
       return false;
     }
   };

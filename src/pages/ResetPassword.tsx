@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { emailService } from '@/services/emailService';
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
@@ -29,9 +30,9 @@ const ResetPassword = () => {
       }
 
       try {
-        // Simulate token validation
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setIsValidToken(true);
+        // Check if token is valid using email service
+        const tokenData = emailService.validateResetToken(token);
+        setIsValidToken(!!tokenData);
       } catch (error) {
         setIsValidToken(false);
       }
@@ -74,12 +75,12 @@ const ResetPassword = () => {
         
         // Redirect to login after successful reset
         setTimeout(() => {
-          navigate('/login');
+          navigate('/');
         }, 2000);
       } else {
         toast({
           title: "Error",
-          description: "Failed to reset password. Please try again.",
+          description: "Invalid or expired reset token. Please request a new reset link.",
           variant: "destructive",
         });
       }
@@ -115,13 +116,13 @@ const ResetPassword = () => {
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-2" />
             <CardTitle>Invalid Reset Link</CardTitle>
             <CardDescription>
-              This password reset link is invalid or has expired.
+              This password reset link is invalid or has expired. Please request a new reset link.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button 
               className="w-full" 
-              onClick={() => navigate('/login')}
+              onClick={() => navigate('/')}
             >
               Back to Login
             </Button>
