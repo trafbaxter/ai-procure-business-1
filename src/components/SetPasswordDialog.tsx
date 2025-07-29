@@ -3,19 +3,21 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Key } from 'lucide-react';
 import { User } from '@/types/user';
 
 interface SetPasswordDialogProps {
   user: User;
-  onPasswordSet: (userId: string, newPassword: string) => Promise<void>;
+  onPasswordSet: (userId: string, newPassword: string, mustChangePassword?: boolean) => Promise<void>;
 }
 
 export const SetPasswordDialog: React.FC<SetPasswordDialogProps> = ({ user, onPasswordSet }) => {
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [mustChangePassword, setMustChangePassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -42,7 +44,7 @@ export const SetPasswordDialog: React.FC<SetPasswordDialogProps> = ({ user, onPa
 
     setIsLoading(true);
     try {
-      await onPasswordSet(user.id, password);
+      await onPasswordSet(user.id, password, mustChangePassword);
       toast({
         title: 'Password Updated',
         description: `Password has been set for ${user.name}.`,
@@ -50,6 +52,7 @@ export const SetPasswordDialog: React.FC<SetPasswordDialogProps> = ({ user, onPa
       setOpen(false);
       setPassword('');
       setConfirmPassword('');
+      setMustChangePassword(false);
     } catch (error) {
       toast({
         title: 'Error',
@@ -65,6 +68,7 @@ export const SetPasswordDialog: React.FC<SetPasswordDialogProps> = ({ user, onPa
     if (!newOpen) {
       setPassword('');
       setConfirmPassword('');
+      setMustChangePassword(false);
     }
     setOpen(newOpen);
   };
@@ -107,6 +111,17 @@ export const SetPasswordDialog: React.FC<SetPasswordDialogProps> = ({ user, onPa
               minLength={6}
               disabled={isLoading}
             />
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="mustChangePassword"
+              checked={mustChangePassword}
+              onCheckedChange={(checked) => setMustChangePassword(checked as boolean)}
+              disabled={isLoading}
+            />
+            <Label htmlFor="mustChangePassword" className="text-sm">
+              Force password change on first login
+            </Label>
           </div>
           <div className="flex justify-end space-x-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isLoading}>

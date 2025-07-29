@@ -9,7 +9,7 @@ interface UserContextType {
   createUser: (userData: CreateUserData) => void;
   removeUser: (userId: string) => void;
   updateUserRole: (userId: string, role: 'admin' | 'user') => void;
-  setUserPassword: (userId: string, password: string) => Promise<void>;
+  setUserPassword: (userId: string, password: string, mustChangePassword?: boolean) => Promise<void>;
   isAdmin: () => boolean;
 }
 
@@ -97,7 +97,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     toast({ title: 'User role updated successfully' });
   };
 
-  const setUserPassword = async (userId: string, password: string) => {
+  const setUserPassword = async (userId: string, password: string, mustChangePassword?: boolean) => {
     try {
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -114,6 +114,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const credentials = JSON.parse(localStorage.getItem('user_credentials') || '{}');
       credentials[userId] = hashedPassword;
       localStorage.setItem('user_credentials', JSON.stringify(credentials));
+      
+      // Update user with mustChangePassword flag
+      setUsers(prev => prev.map(u => 
+        u.id === userId ? { ...u, mustChangePassword } : u
+      ));
       
       toast({ title: 'Password set successfully' });
       

@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useUserContext } from '@/contexts/UserContext';
 import { SetPasswordDialog } from '@/components/SetPasswordDialog';
-import { Trash2 } from 'lucide-react';
+import { Trash2, AlertTriangle } from 'lucide-react';
 
 export const UserTable: React.FC = () => {
   const { users, removeUser, updateUserRole, setUserPassword, isAdmin, currentUser } = useUserContext();
@@ -14,8 +14,8 @@ export const UserTable: React.FC = () => {
     updateUserRole(userId, newRole);
   };
 
-  const handlePasswordSet = async (userId: string, newPassword: string) => {
-    await setUserPassword(userId, newPassword);
+  const handlePasswordSet = async (userId: string, newPassword: string, mustChangePassword?: boolean) => {
+    await setUserPassword(userId, newPassword, mustChangePassword);
   };
 
   return (
@@ -34,7 +34,14 @@ export const UserTable: React.FC = () => {
         <TableBody>
           {users.map((user) => (
             <TableRow key={user.id}>
-              <TableCell className="font-medium">{user.name}</TableCell>
+              <TableCell className="font-medium">
+                <div className="flex items-center gap-2">
+                  {user.name}
+                  {user.mustChangePassword && (
+                    <AlertTriangle className="h-4 w-4 text-amber-500" title="Must change password on login" />
+                  )}
+                </div>
+              </TableCell>
               <TableCell>{user.email}</TableCell>
               <TableCell>
                 {isAdmin() && user.id !== currentUser?.id ? (
@@ -57,9 +64,16 @@ export const UserTable: React.FC = () => {
                 )}
               </TableCell>
               <TableCell>
-                <Badge variant={user.status === 'active' ? 'default' : 'secondary'}>
-                  {user.status}
-                </Badge>
+                <div className="flex flex-col gap-1">
+                  <Badge variant={user.status === 'active' ? 'default' : 'secondary'}>
+                    {user.status}
+                  </Badge>
+                  {user.mustChangePassword && (
+                    <Badge variant="outline" className="text-xs text-amber-600">
+                      Password Reset Required
+                    </Badge>
+                  )}
+                </div>
               </TableCell>
               <TableCell>{user.createdAt.toLocaleDateString()}</TableCell>
               {isAdmin() && (
