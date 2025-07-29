@@ -116,6 +116,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     storedCredentials[targetUser!.id] = hashedPassword;
     localStorage.setItem('user_credentials', JSON.stringify(storedCredentials));
     
+    // Handle pending password change users
     if (pendingPasswordChange) {
       const storedUsers = JSON.parse(localStorage.getItem('app_users') || '[]');
       const userIndex = storedUsers.findIndex((u: any) => u.id === pendingPasswordChange.id);
@@ -127,6 +128,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser({ ...pendingPasswordChange, mustChangePassword: false });
       createSession(pendingPasswordChange.id, pendingPasswordChange.email);
       setPendingPasswordChange(null);
+    } 
+    // Handle regular logged-in users who need to change password
+    else if (user && user.mustChangePassword) {
+      const storedUsers = JSON.parse(localStorage.getItem('app_users') || '[]');
+      const userIndex = storedUsers.findIndex((u: any) => u.id === user.id);
+      if (userIndex !== -1) {
+        storedUsers[userIndex].mustChangePassword = false;
+        localStorage.setItem('app_users', JSON.stringify(storedUsers));
+      }
+      
+      setUser({ ...user, mustChangePassword: false });
     }
     
     return true;
