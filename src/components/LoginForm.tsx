@@ -50,7 +50,6 @@ const LoginForm = () => {
               <Label htmlFor="email">Email</Label>
               <Input
                 type="email"
-                placeholder="admin@company.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -68,7 +67,6 @@ const LoginForm = () => {
               <Input
                 id="password"
                 type="password"
-                placeholder="admin123"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
