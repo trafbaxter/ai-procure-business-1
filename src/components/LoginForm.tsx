@@ -7,29 +7,37 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, AlertCircle } from 'lucide-react';
 import ForgotPasswordDialog from './ForgotPasswordDialog';
+import ChangePasswordForm from './ChangePasswordForm';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { login, isLoading } = useAuth();
+  const { login, isLoading, pendingPasswordChange } = useAuth();
+
+  // If there's a pending password change, show the change password form
+  if (pendingPasswordChange) {
+    return <ChangePasswordForm />;
+  }
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     
     try {
-      const success = await login(email, password);
-      if (!success) {
+      const result = await login(email, password);
+      if (!result.success) {
         setError('Invalid email or password. Please try again.');
       }
+      // If mustChangePassword is true, the pendingPasswordChange state will be set
+      // and the component will re-render to show the ChangePasswordForm
     } catch (err) {
       setError('An error occurred during login. Please try again.');
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl text-center">Sign in</CardTitle>
