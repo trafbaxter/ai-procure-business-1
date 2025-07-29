@@ -19,14 +19,14 @@ const AppLayout: React.FC = () => {
   const isAdmin = user?.role === 'admin';
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <ProcurementHeader />
       
       <main className="container mx-auto px-4 py-6">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Procurement Dashboard</h2>
-            <p className="text-gray-600">Monitor your procurement operations with AI-powered insights</p>
+            <h2 className="text-3xl font-bold text-foreground mb-2">Procurement Dashboard</h2>
+            <p className="text-muted-foreground">Monitor your procurement operations with AI-powered insights</p>
           </div>
           <div className="flex gap-2">
             {isAdmin && (

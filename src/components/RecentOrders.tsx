@@ -72,22 +72,22 @@ const RecentOrders: React.FC = () => {
       <CardContent>
         <div className="space-y-4">
           {orders.map((order) => (
-            <div key={order.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+            <div key={order.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-1">
-                  <span className="font-medium text-sm">{order.id}</span>
+                  <span className="font-medium text-sm text-foreground">{order.id}</span>
                   <Badge className={getStatusColor(order.status)}>
                     {order.status}
                   </Badge>
                 </div>
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-muted-foreground">
                   <div>{order.supplier}</div>
                   <div className="text-xs">{order.items}</div>
                 </div>
               </div>
               <div className="text-right">
-                <div className="font-semibold">{order.amount}</div>
-                <div className="text-xs text-gray-500">{order.date}</div>
+                <div className="font-semibold text-foreground">{order.amount}</div>
+                <div className="text-xs text-muted-foreground">{order.date}</div>
               </div>
               <div className="ml-3 flex gap-1">
                 <Button variant="ghost" size="icon" className="h-8 w-8">
