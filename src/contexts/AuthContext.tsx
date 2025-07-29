@@ -16,6 +16,7 @@ interface User {
 interface LoginResult {
   success: boolean;
   mustChangePassword?: boolean;
+  requiresTwoFactor?: boolean;
   user?: User;
 }
 
@@ -23,12 +24,14 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<LoginResult>;
+  verifyTwoFactor: (code: string, isBackupCode?: boolean) => Promise<boolean>;
   logout: () => void;
   resetPassword: (email: string) => Promise<boolean>;
   updatePassword: (token: string, newPassword: string) => Promise<boolean>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<boolean>;
   isLoading: boolean;
   pendingPasswordChange: User | null;
+  pendingTwoFactor: User | null;
   completePendingLogin: () => void;
 }
 
@@ -45,6 +48,7 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [pendingPasswordChange, setPendingPasswordChange] = useState<User | null>(null);
+  const [pendingTwoFactor, setPendingTwoFactor] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -74,6 +78,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const adminHash = hashPassword('admin123');
         if (verifyPassword(password, adminHash)) {
           const userData = { id: '1', name: 'Admin User', email: 'admin@company.com', role: 'admin' as const };
+          
+          // Check if 2FA is enabled
+          const twoFactorData = localStorage.getItem(`2fa_${userData.id}`);
+          if (twoFactorData) {
+            setPendingTwoFactor(userData);
+            return { success: true, requiresTwoFactor: true, user: userData };
+          }
+          
           setUser(userData);
           createSession(userData.id, userData.email);
           return { success: true, user: userData };
@@ -88,6 +100,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return { success: true, mustChangePassword: true, user: foundUser };
           }
           
+          // Check if 2FA is enabled
+          const twoFactorData = localStorage.getItem(`2fa_${foundUser.id}`);
+          if (twoFactorData) {
+            setPendingTwoFactor(foundUser);
+            return { success: true, requiresTwoFactor: true, user: foundUser };
+          }
+          
           setUser(foundUser);
           createSession(foundUser.id, foundUser.email);
           return { success: true, user: foundUser };
@@ -98,6 +117,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const verifyTwoFactor = async (code: string, isBackupCode = false): Promise<boolean> => {
+    if (!pendingTwoFactor) return false;
+    
+    // Simple verification - in real app would use proper TOTP
+    if (isBackupCode) {
+      const backupCodes = JSON.parse(localStorage.getItem(`2fa_backup_${pendingTwoFactor.id}`) || '[]');
+      const codeIndex = backupCodes.indexOf(code.toUpperCase());
+      if (codeIndex !== -1) {
+        backupCodes.splice(codeIndex, 1);
+        localStorage.setItem(`2fa_backup_${pendingTwoFactor.id}`, JSON.stringify(backupCodes));
+        
+        setUser(pendingTwoFactor);
+        createSession(pendingTwoFactor.id, pendingTwoFactor.email);
+        setPendingTwoFactor(null);
+        return true;
+      }
+    } else {
+      // Simple check - in real app would verify TOTP
+      if (code.length === 6) {
+        setUser(pendingTwoFactor);
+        createSession(pendingTwoFactor.id, pendingTwoFactor.email);
+        setPendingTwoFactor(null);
+        return true;
+      }
+    }
+    
+    return false;
   };
 
   const changePassword = async (currentPassword: string, newPassword: string): Promise<boolean> => {
@@ -114,7 +162,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     storedCredentials[targetUser!.id] = hashedPassword;
     localStorage.setItem('user_credentials', JSON.stringify(storedCredentials));
     
-    // Update localStorage users array
     const storedUsers = JSON.parse(localStorage.getItem('app_users') || '[]');
     const userIndex = storedUsers.findIndex((u: any) => u.id === targetUser!.id);
     if (userIndex !== -1) {
@@ -122,7 +169,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('app_users', JSON.stringify(storedUsers));
     }
     
-    // Trigger storage event to update UserContext
     window.dispatchEvent(new StorageEvent('storage', {
       key: 'app_users',
       newValue: JSON.stringify(storedUsers)
@@ -175,6 +221,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setUser(null);
     setPendingPasswordChange(null);
+    setPendingTwoFactor(null);
     clearSession();
   };
 
@@ -183,12 +230,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       user,
       isAuthenticated: !!user,
       login,
+      verifyTwoFactor,
       logout,
       resetPassword,
       updatePassword,
       changePassword,
       isLoading,
       pendingPasswordChange,
+      pendingTwoFactor,
       completePendingLogin
     }}>
       {children}
