@@ -35,28 +35,42 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [users, setUsers] = useState<User[]>([]);
 
-  // Load users from localStorage on mount
+  // Load users from localStorage and listen for changes
   useEffect(() => {
-    const storedUsers = localStorage.getItem('app_users');
-    if (storedUsers) {
-      const parsedUsers = JSON.parse(storedUsers).map((user: any) => ({
-        ...user,
-        createdAt: new Date(user.createdAt)
-      }));
-      setUsers([currentUser, ...parsedUsers.filter((u: User) => u.id !== currentUser.id)]);
-    } else {
-      setUsers([
-        currentUser,
-        {
-          id: '2',
-          name: 'John Doe',
-          email: 'john@company.com',
-          role: 'user',
-          createdAt: new Date(),
-          status: 'active'
-        }
-      ]);
-    }
+    const loadUsers = () => {
+      const storedUsers = localStorage.getItem('app_users');
+      if (storedUsers) {
+        const parsedUsers = JSON.parse(storedUsers).map((user: any) => ({
+          ...user,
+          createdAt: new Date(user.createdAt)
+        }));
+        setUsers([currentUser, ...parsedUsers.filter((u: User) => u.id !== currentUser.id)]);
+      } else {
+        setUsers([
+          currentUser,
+          {
+            id: '2',
+            name: 'John Doe',
+            email: 'john@company.com',
+            role: 'user',
+            createdAt: new Date(),
+            status: 'active'
+          }
+        ]);
+      }
+    };
+
+    loadUsers();
+
+    // Listen for storage changes to update users when password is changed
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'app_users') {
+        loadUsers();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   // Save users to localStorage whenever users change
@@ -82,7 +96,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     setUsers(prev => prev.filter(user => user.id !== userId));
     
-    // Also remove stored password
     const credentials = JSON.parse(localStorage.getItem('user_credentials') || '{}');
     delete credentials[userId];
     localStorage.setItem('user_credentials', JSON.stringify(credentials));
@@ -99,7 +112,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const setUserPassword = async (userId: string, password: string, mustChangePassword?: boolean) => {
     try {
-      // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       const user = users.find(u => u.id === userId);
@@ -107,15 +119,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error('User not found');
       }
       
-      // Hash password before storing
       const hashedPassword = hashPassword(password);
       
-      // Store hashed password in localStorage
       const credentials = JSON.parse(localStorage.getItem('user_credentials') || '{}');
       credentials[userId] = hashedPassword;
       localStorage.setItem('user_credentials', JSON.stringify(credentials));
       
-      // Update user with mustChangePassword flag
       setUsers(prev => prev.map(u => 
         u.id === userId ? { ...u, mustChangePassword } : u
       ));

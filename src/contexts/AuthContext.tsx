@@ -70,7 +70,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const storedCredentials = JSON.parse(localStorage.getItem('user_credentials') || '{}');
       const storedUsers = JSON.parse(localStorage.getItem('app_users') || '[]');
       
-      // Check admin
       if (email === 'admin@company.com') {
         const adminHash = hashPassword('admin123');
         if (verifyPassword(password, adminHash)) {
@@ -81,7 +80,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
       
-      // Check users
       const foundUser = storedUsers.find((u: any) => u.email === email);
       if (foundUser && storedCredentials[foundUser.id]) {
         if (verifyPassword(password, storedCredentials[foundUser.id])) {
@@ -116,28 +114,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     storedCredentials[targetUser!.id] = hashedPassword;
     localStorage.setItem('user_credentials', JSON.stringify(storedCredentials));
     
-    // Handle pending password change users
+    // Update localStorage users array
+    const storedUsers = JSON.parse(localStorage.getItem('app_users') || '[]');
+    const userIndex = storedUsers.findIndex((u: any) => u.id === targetUser!.id);
+    if (userIndex !== -1) {
+      storedUsers[userIndex].mustChangePassword = false;
+      localStorage.setItem('app_users', JSON.stringify(storedUsers));
+    }
+    
+    // Trigger storage event to update UserContext
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'app_users',
+      newValue: JSON.stringify(storedUsers)
+    }));
+    
     if (pendingPasswordChange) {
-      const storedUsers = JSON.parse(localStorage.getItem('app_users') || '[]');
-      const userIndex = storedUsers.findIndex((u: any) => u.id === pendingPasswordChange.id);
-      if (userIndex !== -1) {
-        storedUsers[userIndex].mustChangePassword = false;
-        localStorage.setItem('app_users', JSON.stringify(storedUsers));
-      }
-      
       setUser({ ...pendingPasswordChange, mustChangePassword: false });
       createSession(pendingPasswordChange.id, pendingPasswordChange.email);
       setPendingPasswordChange(null);
-    } 
-    // Handle regular logged-in users who need to change password
-    else if (user && user.mustChangePassword) {
-      const storedUsers = JSON.parse(localStorage.getItem('app_users') || '[]');
-      const userIndex = storedUsers.findIndex((u: any) => u.id === user.id);
-      if (userIndex !== -1) {
-        storedUsers[userIndex].mustChangePassword = false;
-        localStorage.setItem('app_users', JSON.stringify(storedUsers));
-      }
-      
+    } else if (user) {
       setUser({ ...user, mustChangePassword: false });
     }
     
