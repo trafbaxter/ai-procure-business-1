@@ -11,7 +11,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
-import { User, Settings, LogOut, UserCircle, Users } from 'lucide-react';
+import { User, Settings, LogOut, UserCircle, Users, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const UserDropdown: React.FC = () => {
@@ -24,6 +24,10 @@ const UserDropdown: React.FC = () => {
 
   const handleSettings = () => {
     console.log('Opening settings...');
+  };
+
+  const handleSecurity = () => {
+    navigate('/security');
   };
 
   const handleUserManagement = () => {
@@ -66,6 +70,10 @@ const UserDropdown: React.FC = () => {
         <DropdownMenuItem onClick={handleSettings}>
           <Settings className="mr-2 h-4 w-4" />
           Settings
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleSecurity}>
+          <Shield className="mr-2 h-4 w-4" />
+          Security
         </DropdownMenuItem>
         {user.role === 'admin' && (
           <DropdownMenuItem onClick={handleUserManagement}>

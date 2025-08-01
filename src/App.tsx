@@ -13,6 +13,7 @@ import ResetPassword from "@/pages/ResetPassword";
 import Index from "./pages/Index";
 import ApiSettings from "./pages/ApiSettings";
 import { UserManagement } from "./pages/UserManagement";
+import SecuritySettings from "./pages/SecuritySettings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +44,11 @@ const App = () => (
                 <Route path="/users" element={
                   <ProtectedRoute>
                     <UserManagement />
+                  </ProtectedRoute>
+                } />
+                <Route path="/security" element={
+                  <ProtectedRoute>
+                    <SecuritySettings />
                   </ProtectedRoute>
                 } />
                 <Route path="*" element={<NotFound />} />

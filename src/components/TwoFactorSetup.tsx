@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { QRCodeSVG } from 'qrcode.react';
+
 import { Shield, Copy, Check } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 
@@ -89,8 +89,12 @@ const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCancel })
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex justify-center">
-            <QRCodeSVG value={qrCodeUrl} size={200} />
+          <div className="flex justify-center p-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <div className="text-center">
+              <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">QR Code</div>
+              <div className="text-xs text-gray-500">Use your authenticator app to scan</div>
+              <div className="mt-2 text-xs font-mono break-all">{qrCodeUrl}</div>
+            </div>
           </div>
           
           <div className="space-y-2">
@@ -192,3 +196,5 @@ const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCancel })
     </Card>
   );
 };
+
+export default TwoFactorSetup;
