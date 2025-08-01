@@ -4,16 +4,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-
+import { useAuth } from '@/contexts/AuthContext';
 import { Shield, Copy, Check } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
-
 interface TwoFactorSetupProps {
   onComplete: (secret: string, backupCodes: string[]) => void;
   onCancel: () => void;
 }
 
 const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCancel }) => {
+  const { user } = useAuth();
   const [secret, setSecret] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
   const [qrCodeUrl, setQrCodeUrl] = useState('');
@@ -37,7 +37,7 @@ const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCancel })
     
     // Create QR code URL for authenticator apps
     const appName = 'Procurement App';
-    const userEmail = 'user@example.com'; // This should come from user context
+    const userEmail = user?.email || 'user@example.com';
     const qrUrl = `otpauth://totp/${appName}:${userEmail}?secret=${newSecret}&issuer=${appName}`;
     setQrCodeUrl(qrUrl);
 
@@ -47,7 +47,7 @@ const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCancel })
       codes.push(Math.random().toString(36).substring(2, 10).toUpperCase());
     }
     setBackupCodes(codes);
-  }, []);
+  }, [user]);
 
   const copySecret = () => {
     navigator.clipboard.writeText(secret);
