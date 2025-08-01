@@ -3,7 +3,7 @@ import { useAppContext } from '@/contexts/AppContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
-import { Settings, Users } from 'lucide-react';
+import { Settings, Users, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ProcurementHeader from './ProcurementHeader';
 import DashboardStats from './DashboardStats';
@@ -49,6 +49,14 @@ const AppLayout: React.FC = () => {
                 Users
               </Button>
             )}
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/security')}
+              className="flex items-center gap-2"
+            >
+              <Shield className="w-4 h-4" />
+              Security
+            </Button>
           </div>
         </div>
         
