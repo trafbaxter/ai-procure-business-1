@@ -92,8 +92,14 @@ const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCancel })
           <div className="flex justify-center p-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
             <div className="text-center">
               <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">QR Code</div>
-              <div className="text-xs text-gray-500">Use your authenticator app to scan</div>
-              <div className="mt-2 text-xs font-mono break-all">{qrCodeUrl}</div>
+              <div className="text-xs text-gray-500 mb-4">Use your authenticator app to scan</div>
+              <img 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrCodeUrl)}`}
+                alt="QR Code for 2FA setup"
+                className="mx-auto border rounded"
+                width={200}
+                height={200}
+              />
             </div>
           </div>
           
