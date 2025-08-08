@@ -11,12 +11,37 @@ const AIAssistant: React.FC = () => {
     { role: 'assistant', content: 'Hello! I\'m your AI procurement assistant. How can I help you today?' }
   ]);
 
+  const getAIResponse = (userMessage: string): string => {
+    const msg = userMessage.toLowerCase();
+    
+    if (msg.includes('supplier') || msg.includes('vendor')) {
+      return 'I can help you find qualified suppliers. Would you like me to search for suppliers in a specific category or location?';
+    } else if (msg.includes('cost') || msg.includes('price') || msg.includes('budget')) {
+      return 'I can analyze costs and help optimize your procurement budget. What type of cost analysis are you looking for?';
+    } else if (msg.includes('order') || msg.includes('purchase')) {
+      return 'I can help track orders and manage purchase requests. Would you like to check order status or create a new purchase request?';
+    } else if (msg.includes('contract') || msg.includes('agreement')) {
+      return 'I can assist with contract management and vendor agreements. What contract-related task can I help with?';
+    } else if (msg.includes('inventory') || msg.includes('stock')) {
+      return 'I can help manage inventory levels and stock optimization. What inventory information do you need?';
+    } else if (msg.includes('report') || msg.includes('analytics')) {
+      return 'I can generate procurement reports and analytics. What type of report would you like me to create?';
+    } else if (msg.includes('hello') || msg.includes('hi') || msg.includes('help')) {
+      return 'Hello! I\'m here to assist with procurement tasks like finding suppliers, analyzing costs, tracking orders, and generating reports. What can I help you with?';
+    } else {
+      return `I understand you're asking about "${userMessage}". I can help with supplier management, cost analysis, order tracking, contracts, inventory, and reporting. Could you be more specific about what you need?`;
+    }
+  };
+
   const handleSend = () => {
     if (!message.trim()) return;
     
+    const userMsg = message.trim();
+    const aiResponse = getAIResponse(userMsg);
+    
     setMessages(prev => [...prev, 
-      { role: 'user', content: message },
-      { role: 'assistant', content: 'I can help you find suppliers, analyze costs, track orders, and optimize your procurement process. What specific task would you like assistance with?' }
+      { role: 'user', content: userMsg },
+      { role: 'assistant', content: aiResponse }
     ]);
     setMessage('');
   };
