@@ -12,25 +12,39 @@ const AIAssistant: React.FC = () => {
   ]);
 
   const getAIResponse = (userMessage: string): string => {
-    const msg = userMessage.toLowerCase();
+    const msg = userMessage.toLowerCase().trim();
     
-    if (msg.includes('supplier') || msg.includes('vendor')) {
-      return 'I can help you find qualified suppliers. Would you like me to search for suppliers in a specific category or location?';
-    } else if (msg.includes('cost') || msg.includes('price') || msg.includes('budget')) {
-      return 'I can analyze costs and help optimize your procurement budget. What type of cost analysis are you looking for?';
-    } else if (msg.includes('order') || msg.includes('purchase')) {
-      return 'I can help track orders and manage purchase requests. Would you like to check order status or create a new purchase request?';
-    } else if (msg.includes('contract') || msg.includes('agreement')) {
-      return 'I can assist with contract management and vendor agreements. What contract-related task can I help with?';
-    } else if (msg.includes('inventory') || msg.includes('stock')) {
-      return 'I can help manage inventory levels and stock optimization. What inventory information do you need?';
-    } else if (msg.includes('report') || msg.includes('analytics')) {
-      return 'I can generate procurement reports and analytics. What type of report would you like me to create?';
-    } else if (msg.includes('hello') || msg.includes('hi') || msg.includes('help')) {
-      return 'Hello! I\'m here to assist with procurement tasks like finding suppliers, analyzing costs, tracking orders, and generating reports. What can I help you with?';
-    } else {
-      return `I understand you're asking about "${userMessage}". I can help with supplier management, cost analysis, order tracking, contracts, inventory, and reporting. Could you be more specific about what you need?`;
+    // More specific keyword matching
+    if (msg.includes('supplier') || msg.includes('vendor') || msg.includes('source')) {
+      return `I can help you find qualified suppliers for your procurement needs. Based on your query "${userMessage}", would you like me to search for suppliers in a specific category, location, or industry sector?`;
+    } 
+    
+    if (msg.includes('cost') || msg.includes('price') || msg.includes('budget') || msg.includes('spend')) {
+      return `I can analyze costs and help optimize your procurement budget. For "${userMessage}", I can provide cost breakdowns, budget forecasts, or spending analysis. What specific cost information do you need?`;
+    } 
+    
+    if (msg.includes('order') || msg.includes('purchase') || msg.includes('buy')) {
+      return `I can help track orders and manage purchase requests. Regarding "${userMessage}", would you like to check order status, create a new purchase request, or review existing orders?`;
+    } 
+    
+    if (msg.includes('contract') || msg.includes('agreement') || msg.includes('terms')) {
+      return `I can assist with contract management and vendor agreements. For your question about "${userMessage}", I can help with contract reviews, terms negotiation, or compliance tracking.`;
+    } 
+    
+    if (msg.includes('inventory') || msg.includes('stock') || msg.includes('warehouse')) {
+      return `I can help manage inventory levels and stock optimization. Based on "${userMessage}", I can provide stock levels, reorder recommendations, or inventory forecasts.`;
+    } 
+    
+    if (msg.includes('report') || msg.includes('analytics') || msg.includes('data')) {
+      return `I can generate procurement reports and analytics. For "${userMessage}", I can create spending reports, supplier performance analytics, or custom dashboards. What metrics interest you?`;
+    } 
+    
+    if (msg.includes('hello') || msg.includes('hi') || msg.includes('help') || msg === '') {
+      return 'Hello! I\'m here to assist with procurement tasks like finding suppliers, analyzing costs, tracking orders, and generating reports. What can I help you with today?';
     }
+    
+    // Default response that acknowledges the specific question
+    return `Thanks for asking about "${userMessage}". I specialize in procurement assistance including supplier management, cost analysis, order tracking, contract management, inventory optimization, and reporting. Could you tell me more specifically what you'd like help with?`;
   };
 
   const handleSend = () => {

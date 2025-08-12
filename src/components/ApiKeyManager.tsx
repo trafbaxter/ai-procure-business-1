@@ -80,7 +80,7 @@ const ApiKeyManager: React.FC = () => {
       <CardHeader>
         <CardTitle>API Key Management</CardTitle>
         <CardDescription>
-          Create and manage API keys for external applications to access this app
+          Create and manage API keys for external applications
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

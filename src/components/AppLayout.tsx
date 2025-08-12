@@ -7,7 +7,7 @@ import { Settings, Users, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ProcurementHeader from './ProcurementHeader';
 import DashboardStats from './DashboardStats';
-import AIAssistant from './AIAssistant';
+import EnhancedAIAssistant from './EnhancedAIAssistant';
 import RecentOrders from './RecentOrders';
 
 const AppLayout: React.FC = () => {
@@ -68,7 +68,7 @@ const AppLayout: React.FC = () => {
               <RecentOrders />
             </div>
             <div className="lg:col-span-1">
-              <AIAssistant />
+              <EnhancedAIAssistant />
             </div>
           </div>
         </div>
