@@ -1,18 +1,32 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CreateUserDialog } from '@/components/CreateUserDialog';
 import { UserTable } from '@/components/UserTable';
 import { useUserContext } from '@/contexts/UserContext';
-import { Users, Shield, User, ArrowLeft } from 'lucide-react';
+import { Users, Shield, User, ArrowLeft, Database } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-
+import { createAllTables } from '@/utils/createDynamoTables';
 export const UserManagement: React.FC = () => {
   const { users, isAdmin } = useUserContext();
   const navigate = useNavigate();
+  const [isCreatingTables, setIsCreatingTables] = useState(false);
 
   const handleBackToDashboard = () => {
     navigate('/');
+  };
+
+  const handleCreateTables = async () => {
+    setIsCreatingTables(true);
+    try {
+      await createAllTables();
+      // Refresh the page to retry loading users
+      window.location.reload();
+    } catch (error) {
+      console.error('Failed to create tables:', error);
+    } finally {
+      setIsCreatingTables(false);
+    }
   };
 
   if (!isAdmin()) {
@@ -61,7 +75,18 @@ export const UserManagement: React.FC = () => {
             <p className="text-gray-600">Manage users and their roles</p>
           </div>
         </div>
-        <CreateUserDialog />
+        <div className="flex gap-2">
+          <Button
+            onClick={handleCreateTables}
+            disabled={isCreatingTables}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Database className="h-4 w-4" />
+            {isCreatingTables ? 'Creating Tables...' : 'Create DB Tables'}
+          </Button>
+          <CreateUserDialog />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
