@@ -101,6 +101,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (dbUser) {
         console.log('🔧 DynamoDB user password verification...');
+        console.log('🔧 Input password:', password);
+        console.log('🔧 Stored hash:', dbUser.Password);
+        console.log('🔧 Hash length:', dbUser.Password?.length);
+        
         const passwordMatch = await verifyPassword(password, dbUser.Password);
         console.log('🔧 DynamoDB password match:', passwordMatch);
         
@@ -129,9 +133,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return { success: true, user: userData };
         } else {
           console.log('🔧 DynamoDB password verification failed');
+          // Try plain text comparison as fallback
+          console.log('🔧 Trying plain text comparison...');
+          if (password === dbUser.Password) {
+            console.log('🔧 Plain text password match - updating to hashed');
+            // Update to hashed password
+            const hashedPassword = await hashPassword(password);
+            await dynamoUserService.updateUser({
+              ...dbUser,
+              Password: hashedPassword
+            });
+            
+            const userData = {
+              id: dbUser.UserID,
+              name: dbUser.UserName,
+              email: dbUser.Email,
+              role: dbUser.IsAdmin ? 'admin' as const : 'user' as const,
+              mustChangePassword: dbUser.mustChangePassword
+            };
+            
+            setUser(userData);
+            createSession(userData.id, userData.email);
+            return { success: true, user: userData };
+          }
         }
       }
-      
       // Fallback to localStorage for existing users
       console.log('🔧 Checking localStorage for user...');
       const storedCredentials = JSON.parse(localStorage.getItem('user_credentials') || '{}');
