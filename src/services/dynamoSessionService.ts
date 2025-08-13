@@ -1,5 +1,5 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, GetCommand, PutCommand, DeleteCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, GetCommand, PutCommand, DeleteCommand, UpdateCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { DYNAMODB_CONFIG, isDynamoDBEnabled } from '@/config/dynamodb';
 
 const client = new DynamoDBClient({ region: DYNAMODB_CONFIG.region });
@@ -18,11 +18,15 @@ export const dynamoSessionService = {
     if (!isDynamoDBEnabled()) return null;
     
     try {
-      const result = await docClient.send(new GetCommand({
+      const result = await docClient.send(new ScanCommand({
         TableName: DYNAMODB_CONFIG.tables.sessions,
-        Key: { SessionID }
+        FilterExpression: 'SessionID = :sessionId AND App = :app',
+        ExpressionAttributeValues: {
+          ':sessionId': SessionID,
+          ':app': 'Procurement'
+        }
       }));
-      return result.Item as Session || null;
+      return result.Items?.[0] as Session || null;
     } catch (error) {
       console.error('DynamoDB getSession error:', error);
       return null;
@@ -35,7 +39,7 @@ export const dynamoSessionService = {
     try {
       await docClient.send(new PutCommand({
         TableName: DYNAMODB_CONFIG.tables.sessions,
-        Item: session
+        Item: { ...session, App: 'Procurement' }
       }));
       return true;
     } catch (error) {

@@ -21,11 +21,15 @@ export const dynamoApiKeyService = {
     if (!isDynamoDBEnabled()) return null;
     
     try {
-      const result = await docClient.send(new GetCommand({
+      const result = await docClient.send(new ScanCommand({
         TableName: DYNAMODB_CONFIG.tables.apiKeys,
-        Key: { ApiKeyID }
+        FilterExpression: 'ApiKeyID = :apiKeyId AND App = :app',
+        ExpressionAttributeValues: {
+          ':apiKeyId': ApiKeyID,
+          ':app': 'Procurement'
+        }
       }));
-      return result.Item as ApiKey || null;
+      return result.Items?.[0] as ApiKey || null;
     } catch (error) {
       console.error('DynamoDB getApiKey error:', error);
       return null;
@@ -37,7 +41,11 @@ export const dynamoApiKeyService = {
     
     try {
       const result = await docClient.send(new ScanCommand({
-        TableName: DYNAMODB_CONFIG.tables.apiKeys
+        TableName: DYNAMODB_CONFIG.tables.apiKeys,
+        FilterExpression: 'App = :app',
+        ExpressionAttributeValues: {
+          ':app': 'Procurement'
+        }
       }));
       return result.Items as ApiKey[] || [];
     } catch (error) {
@@ -52,7 +60,7 @@ export const dynamoApiKeyService = {
     try {
       await docClient.send(new PutCommand({
         TableName: DYNAMODB_CONFIG.tables.apiKeys,
-        Item: apiKey
+        Item: { ...apiKey, App: 'Procurement' }
       }));
       return true;
     } catch (error) {

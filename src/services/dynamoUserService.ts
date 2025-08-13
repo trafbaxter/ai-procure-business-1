@@ -26,6 +26,7 @@ export const dynamoUserService = {
       const command = new PutCommand({
         TableName: TABLE_NAME,
         Item: {
+          App: 'Procurement',
           UserID: user.UserID,
           Email: user.Email, // Sort key
           Name: user.UserName, // Name field for DynamoDB
@@ -51,9 +52,10 @@ export const dynamoUserService = {
       // Since we need both UserID and Email for composite key, scan instead
       const command = new ScanCommand({
         TableName: TABLE_NAME,
-        FilterExpression: 'UserID = :userId',
+        FilterExpression: 'UserID = :userId AND App = :app',
         ExpressionAttributeValues: {
           ':userId': userId,
+          ':app': 'Procurement',
         },
       });
 
@@ -69,9 +71,10 @@ export const dynamoUserService = {
     try {
       const command = new ScanCommand({
         TableName: TABLE_NAME,
-        FilterExpression: 'Email = :email',
+        FilterExpression: 'Email = :email AND App = :app',
         ExpressionAttributeValues: {
           ':email': email,
+          ':app': 'Procurement',
         },
       });
 
@@ -87,9 +90,10 @@ export const dynamoUserService = {
     try {
       const command = new ScanCommand({
         TableName: TABLE_NAME,
-        FilterExpression: 'attribute_not_exists(Deleted) OR Deleted = :deleted',
+        FilterExpression: '(attribute_not_exists(Deleted) OR Deleted = :deleted) AND App = :app',
         ExpressionAttributeValues: {
           ':deleted': false,
+          ':app': 'Procurement',
         },
       });
 

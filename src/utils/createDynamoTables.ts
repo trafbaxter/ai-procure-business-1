@@ -29,9 +29,103 @@ export async function createUsersTable(): Promise<boolean> {
       ],
       AttributeDefinitions: [
         { AttributeName: 'UserID', AttributeType: 'S' },
-        { AttributeName: 'Email', AttributeType: 'S' }
+        { AttributeName: 'Email', AttributeType: 'S' },
+        { AttributeName: 'App', AttributeType: 'S' }
       ],
-      BillingMode: 'PAY_PER_REQUEST'
+      BillingMode: 'PAY_PER_REQUEST',
+      GlobalSecondaryIndexes: [
+        {
+          IndexName: 'AppIndex',
+          KeySchema: [
+            { AttributeName: 'App', KeyType: 'HASH' }
+          ],
+          Projection: { ProjectionType: 'ALL' }
+        }
+      ]
+    });
+
+    await client.send(command);
+    console.log(`✅ Created table: ${tableName}`);
+    return true;
+  } catch (error) {
+    console.error(`❌ Failed to create table ${tableName}:`, error);
+    return false;
+  }
+}
+
+export async function createApiKeysTable(): Promise<boolean> {
+  const tableName = import.meta.env.VITE_DYNAMODB_API_KEYS_TABLE || 'ApiKeys';
+  
+  try {
+    try {
+      await client.send(new DescribeTableCommand({ TableName: tableName }));
+      console.log(`✅ Table ${tableName} already exists`);
+      return true;
+    } catch (error) {
+      // Table doesn't exist, create it
+    }
+
+    const command = new CreateTableCommand({
+      TableName: tableName,
+      KeySchema: [
+        { AttributeName: 'KeyID', KeyType: 'HASH' }
+      ],
+      AttributeDefinitions: [
+        { AttributeName: 'KeyID', AttributeType: 'S' },
+        { AttributeName: 'App', AttributeType: 'S' }
+      ],
+      BillingMode: 'PAY_PER_REQUEST',
+      GlobalSecondaryIndexes: [
+        {
+          IndexName: 'AppIndex',
+          KeySchema: [
+            { AttributeName: 'App', KeyType: 'HASH' }
+          ],
+          Projection: { ProjectionType: 'ALL' }
+        }
+      ]
+    });
+
+    await client.send(command);
+    console.log(`✅ Created table: ${tableName}`);
+    return true;
+  } catch (error) {
+    console.error(`❌ Failed to create table ${tableName}:`, error);
+    return false;
+  }
+}
+
+export async function createSessionsTable(): Promise<boolean> {
+  const tableName = import.meta.env.VITE_DYNAMODB_SESSIONS_TABLE || 'Sessions';
+  
+  try {
+    try {
+      await client.send(new DescribeTableCommand({ TableName: tableName }));
+      console.log(`✅ Table ${tableName} already exists`);
+      return true;
+    } catch (error) {
+      // Table doesn't exist, create it
+    }
+
+    const command = new CreateTableCommand({
+      TableName: tableName,
+      KeySchema: [
+        { AttributeName: 'SessionID', KeyType: 'HASH' }
+      ],
+      AttributeDefinitions: [
+        { AttributeName: 'SessionID', AttributeType: 'S' },
+        { AttributeName: 'App', AttributeType: 'S' }
+      ],
+      BillingMode: 'PAY_PER_REQUEST',
+      GlobalSecondaryIndexes: [
+        {
+          IndexName: 'AppIndex',
+          KeySchema: [
+            { AttributeName: 'App', KeyType: 'HASH' }
+          ],
+          Projection: { ProjectionType: 'ALL' }
+        }
+      ]
     });
 
     await client.send(command);
@@ -46,4 +140,6 @@ export async function createUsersTable(): Promise<boolean> {
 export async function createAllTables(): Promise<void> {
   console.log('🔧 Creating DynamoDB tables...');
   await createUsersTable();
+  await createApiKeysTable();
+  await createSessionsTable();
 }
