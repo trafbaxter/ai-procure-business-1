@@ -75,7 +75,7 @@ export const UserTable: React.FC = () => {
                   )}
                 </div>
               </TableCell>
-              <TableCell>{user.createdAt.toLocaleDateString()}</TableCell>
+              <TableCell>{user.createdAt ? user.createdAt.toLocaleDateString() : 'N/A'}</TableCell>
               {isAdmin() && (
                 <TableCell>
                   <div className="flex items-center gap-2">

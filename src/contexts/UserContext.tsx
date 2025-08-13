@@ -107,7 +107,14 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       IsActive: true,
       IsAdmin: userData.IsAdmin,
       Deleted: false,
-      mustChangePassword: true
+      mustChangePassword: true,
+      // UI-compatible fields
+      id: Date.now().toString(),
+      name: userData.UserName,
+      email: userData.Email,
+      role: userData.IsAdmin ? 'admin' : 'user',
+      status: 'active' as const,
+      createdAt: new Date()
     };
     
     try {
@@ -124,6 +131,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     // Fallback to localStorage
     setUsers(prev => [...prev, newUser]);
+    toast({ title: 'User created successfully (localStorage)' });
   };
   const removeUser = (userId: string) => {
     if (userId === currentUser.UserID) {
