@@ -60,10 +60,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const dbUser = await dynamoUserService.getUserById(session.userId);
           if (dbUser) {
             const userData = {
-              id: dbUser.id,
-              name: dbUser.name,
-              email: dbUser.email,
-              role: dbUser.role,
+              id: dbUser.UserID,
+              name: dbUser.UserName,
+              email: dbUser.Email,
+              role: dbUser.IsAdmin ? 'admin' as const : 'user' as const,
               mustChangePassword: dbUser.mustChangePassword
             };
             setUser(userData);
@@ -94,12 +94,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       // Try DynamoDB first
       const dbUser = await dynamoUserService.getUserByEmail(email);
-      if (dbUser && await verifyPassword(password, dbUser.passwordHash)) {
+      if (dbUser && await verifyPassword(password, dbUser.Password)) {
         const userData = {
-          id: dbUser.id,
-          name: dbUser.name,
-          email: dbUser.email,
-          role: dbUser.role,
+          id: dbUser.UserID,
+          name: dbUser.UserName,
+          email: dbUser.Email,
+          role: dbUser.IsAdmin ? 'admin' as const : 'user' as const,
           mustChangePassword: dbUser.mustChangePassword
         };
         
@@ -123,20 +123,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const storedUsers = JSON.parse(localStorage.getItem('app_users') || '[]');
       
       if (email === 'admin@company.com') {
-        const adminHash = hashPassword('admin123');
-        if (verifyPassword(password, adminHash)) {
-          const userData = { id: '1', name: 'Admin User', email: 'admin@company.com', role: 'admin' as const };
+        // const adminHash = hashPassword('admin123');
+        // if (verifyPassword(password, adminHash)) {
+        //   const userData = { id: '1', name: 'Admin User', email: 'admin@company.com', role: 'admin' as const };
           
-          const twoFactorData = localStorage.getItem(`2fa_${userData.id}`);
-          if (twoFactorData) {
-            setPendingTwoFactor(userData);
-            return { success: true, requiresTwoFactor: true, user: userData };
-          }
+        //   const twoFactorData = localStorage.getItem(`2fa_${userData.id}`);
+        //   if (twoFactorData) {
+        //     setPendingTwoFactor(userData);
+        //     return { success: true, requiresTwoFactor: true, user: userData };
+        //   }
           
-          setUser(userData);
-          createSession(userData.id, userData.email);
-          return { success: true, user: userData };
-        }
+        //   setUser(userData);
+        //   createSession(userData.id, userData.email);
+        //   return { success: true, user: userData };
+        // }
       }
       
       const foundUser = storedUsers.find((u: any) => u.email === email);

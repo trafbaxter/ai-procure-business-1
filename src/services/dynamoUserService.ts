@@ -15,7 +15,7 @@ const docClient = DynamoDBDocumentClient.from(client);
 const TABLE_NAME = import.meta.env.VITE_DYNAMODB_USERS_TABLE || 'Procurement-Users';
 
 console.log('🔧 DynamoDB Configuration Check:', { 
-  region: import.meta.env.VITE_AWS_REGION,
+  region: import.meta.env.VITE_AWS_REGION || 'us-east-1',
   tableName: TABLE_NAME,
   hasCredentials: !!(import.meta.env.VITE_AWS_ACCESS_KEY_ID && import.meta.env.VITE_AWS_SECRET_ACCESS_KEY)
 });
@@ -83,6 +83,12 @@ export const dynamoUserService = {
   },
 
   async getAllUsers(): Promise<User[]> {
+    // Check if AWS credentials are configured
+    if (!import.meta.env.VITE_AWS_ACCESS_KEY_ID || !import.meta.env.VITE_AWS_SECRET_ACCESS_KEY) {
+      console.warn('⚠️ AWS credentials not configured, skipping DynamoDB call');
+      return [];
+    }
+    
     try {
       const command = new ScanCommand({
         TableName: TABLE_NAME,
