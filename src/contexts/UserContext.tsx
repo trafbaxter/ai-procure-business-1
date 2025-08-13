@@ -32,7 +32,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     DateCreated: new Date().toISOString(),
     IsActive: true,
     IsAdmin: true,
-    Deleted: false
+    Deleted: false,
+    id: '1',
+    name: 'Admin User',
+    email: 'admin@company.com',
+    role: 'admin' as const,
+    status: 'active' as const,
+    createdAt: new Date()
   });
 
   const [users, setUsers] = useState<User[]>([]);
@@ -44,7 +50,17 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Try to load from DynamoDB first
         const dbUsers = await dynamoUserService.getAllUsers();
         if (dbUsers.length > 0) {
-          setUsers([currentUser, ...dbUsers.filter((u: User) => u.UserID !== currentUser.UserID)]);
+          // Convert DynamoDB users to proper format with Date objects
+          const formattedUsers = dbUsers.map((user: any) => ({
+            ...user,
+            id: user.UserID,
+            name: user.UserName,
+            email: user.Email,
+            role: user.IsAdmin ? 'admin' : 'user',
+            status: user.IsActive ? 'active' : 'inactive',
+            createdAt: new Date(user.DateCreated)
+          }));
+          setUsers([currentUser, ...formattedUsers.filter((u: any) => u.UserID !== currentUser.UserID)]);
           return;
         }
       } catch (error) {
@@ -62,7 +78,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           DateCreated: new Date().toISOString(),
           IsActive: true,
           IsAdmin: false,
-          Deleted: false
+          Deleted: false,
+          id: '2',
+          name: 'John Doe',
+          email: 'john@company.com',
+          role: 'user' as const,
+          status: 'active' as const,
+          createdAt: new Date()
         }
       ]);
     };
