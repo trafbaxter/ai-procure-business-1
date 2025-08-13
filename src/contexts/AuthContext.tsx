@@ -91,10 +91,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string): Promise<LoginResult> => {
     setIsLoading(true);
+    console.log('🔧 Login attempt for:', email);
+    
     try {
       // Try DynamoDB first
+      console.log('🔧 Checking DynamoDB for user...');
       const dbUser = await dynamoUserService.getUserByEmail(email);
+      console.log('🔧 DynamoDB user found:', !!dbUser);
+      
       if (dbUser && await verifyPassword(password, dbUser.Password)) {
+        console.log('🔧 DynamoDB login successful');
         const userData = {
           id: dbUser.UserID,
           name: dbUser.UserName,
@@ -118,30 +124,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: true, user: userData };
       }
       
-      // Fallback to localStorage for existing users and admin
+      // Fallback to localStorage for existing users
+      console.log('🔧 Checking localStorage for user...');
       const storedCredentials = JSON.parse(localStorage.getItem('user_credentials') || '{}');
       const storedUsers = JSON.parse(localStorage.getItem('app_users') || '[]');
-      
-      if (email === 'admin@company.com') {
-        // const adminHash = hashPassword('admin123');
-        // if (verifyPassword(password, adminHash)) {
-        //   const userData = { id: '1', name: 'Admin User', email: 'admin@company.com', role: 'admin' as const };
-          
-        //   const twoFactorData = localStorage.getItem(`2fa_${userData.id}`);
-        //   if (twoFactorData) {
-        //     setPendingTwoFactor(userData);
-        //     return { success: true, requiresTwoFactor: true, user: userData };
-        //   }
-          
-        //   setUser(userData);
-        //   createSession(userData.id, userData.email);
-        //   return { success: true, user: userData };
-        // }
-      }
+      console.log('🔧 LocalStorage users count:', storedUsers.length);
       
       const foundUser = storedUsers.find((u: any) => u.email === email);
+      console.log('🔧 LocalStorage user found:', !!foundUser);
+      
       if (foundUser && storedCredentials[foundUser.id]) {
+        console.log('🔧 Verifying localStorage password...');
         if (await verifyPassword(password, storedCredentials[foundUser.id])) {
+          console.log('🔧 LocalStorage login successful');
           if (foundUser.mustChangePassword) {
             setPendingPasswordChange(foundUser);
             return { success: true, mustChangePassword: true, user: foundUser };
@@ -156,12 +151,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(foundUser);
           createSession(foundUser.id, foundUser.email);
           return { success: true, user: foundUser };
+        } else {
+          console.log('🔧 LocalStorage password verification failed');
         }
       }
       
+      console.log('🔧 Login failed - no matching user found');
       return { success: false };
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('🔧 Login error:', error);
       return { success: false };
     } finally {
       setIsLoading(false);
