@@ -45,9 +45,9 @@ const UserDropdown: React.FC = () => {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={user.avatar} alt={user.name} />
+            <AvatarImage src={user.avatar} alt={user.UserName || user.Email} />
             <AvatarFallback className="bg-white/10 text-white">
-              {user.name.charAt(0).toUpperCase()}
+              {(user.UserName || user.Email || 'U').charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
         </Button>
@@ -55,11 +55,11 @@ const UserDropdown: React.FC = () => {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel className="flex items-center justify-between">
           <div>
-            <div className="font-medium">{user.name}</div>
-            <div className="text-xs text-muted-foreground">{user.email}</div>
+            <div className="font-medium">{user.UserName || user.Email}</div>
+            <div className="text-xs text-muted-foreground">{user.Email}</div>
           </div>
-          <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-            {user.role}
+          <Badge variant={user.IsAdmin ? 'default' : 'secondary'}>
+            {user.IsAdmin ? 'admin' : 'user'}
           </Badge>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
@@ -75,7 +75,7 @@ const UserDropdown: React.FC = () => {
           <Shield className="mr-2 h-4 w-4" />
           Security
         </DropdownMenuItem>
-        {user.role === 'admin' && (
+        {user.IsAdmin && (
           <DropdownMenuItem onClick={handleUserManagement}>
             <Users className="mr-2 h-4 w-4" />
             User Management
