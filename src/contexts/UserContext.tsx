@@ -54,7 +54,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const formattedUsers = dbUsers.map((user: any) => ({
             ...user,
             id: user.UserID,
-            name: user.UserName,
+            name: user.Name || user.UserName, // Support both Name and UserName fields
             email: user.Email,
             role: user.IsAdmin ? 'admin' : 'user',
             status: user.IsActive ? 'active' : 'inactive',
@@ -96,28 +96,28 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     localStorage.setItem('app_users', JSON.stringify(users));
   }, [users]);
-
   const createUser = async (userData: CreateUserData) => {
-    const newUser: User = {
-      UserID: Date.now().toString(),
-      UserName: userData.UserName,
-      Email: userData.Email,
-      Password: await hashPassword('tempPassword123'),
-      DateCreated: new Date().toISOString(),
-      IsActive: true,
-      IsAdmin: userData.IsAdmin,
-      Deleted: false,
-      mustChangePassword: true,
-      // UI-compatible fields
-      id: Date.now().toString(),
-      name: userData.UserName,
-      email: userData.Email,
-      role: userData.IsAdmin ? 'admin' : 'user',
-      status: 'active' as const,
-      createdAt: new Date()
-    };
-    
     try {
+      // Map UI fields to DynamoDB fields
+      const newUser: User = {
+        UserID: Date.now().toString(),
+        UserName: userData.name, // Map name to UserName
+        Email: userData.email, // Map email to Email
+        Password: await hashPassword('tempPassword123'),
+        DateCreated: new Date().toISOString(),
+        IsActive: true,
+        IsAdmin: userData.role === 'admin', // Map role to IsAdmin
+        Deleted: false,
+        mustChangePassword: true,
+        // UI-compatible fields for immediate display
+        id: Date.now().toString(),
+        name: userData.name,
+        email: userData.email,
+        role: userData.role,
+        status: 'active',
+        createdAt: new Date(),
+      } as User & { id: string; name: string; email: string; role: string; status: string; createdAt: Date };
+
       // Try to save to DynamoDB
       const success = await dynamoUserService.createUser(newUser);
       if (success) {
@@ -130,6 +130,24 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     
     // Fallback to localStorage
+    const newUser: User = {
+      UserID: Date.now().toString(),
+      UserName: userData.name,
+      Email: userData.email,
+      Password: await hashPassword('tempPassword123'),
+      DateCreated: new Date().toISOString(),
+      IsActive: true,
+      IsAdmin: userData.role === 'admin',
+      Deleted: false,
+      mustChangePassword: true,
+      id: Date.now().toString(),
+      name: userData.name,
+      email: userData.email,
+      role: userData.role,
+      status: 'active',
+      createdAt: new Date(),
+    } as User & { id: string; name: string; email: string; role: string; status: string; createdAt: Date };
+    
     setUsers(prev => [...prev, newUser]);
     toast({ title: 'User created successfully (localStorage)' });
   };
