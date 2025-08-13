@@ -3,7 +3,7 @@ import { toast } from '@/components/ui/use-toast';
 import { hashPassword, verifyPassword } from '@/utils/encryption';
 import { createSession, validateSession, clearSession, refreshSession } from '@/utils/sessionManager';
 import { emailService } from '@/services/emailService';
-
+import { dynamoUserService } from '@/services/dynamoUserService';
 interface User {
   id: string;
   name: string;
@@ -52,44 +52,91 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const session = validateSession();
-    if (session) {
-      const storedUsers = JSON.parse(localStorage.getItem('app_users') || '[]');
-      const foundUser = storedUsers.find((u: any) => u.id === session.userId) || 
-        (session.userId === '1' ? { id: '1', name: 'Admin User', email: 'admin@company.com', role: 'admin' } : null);
-      
-      if (foundUser) {
-        setUser(foundUser);
-        refreshSession();
-      } else {
-        clearSession();
+    const initAuth = async () => {
+      const session = validateSession();
+      if (session) {
+        try {
+          // Try to get user from DynamoDB first
+          const dbUser = await dynamoUserService.getUserById(session.userId);
+          if (dbUser) {
+            const userData = {
+              id: dbUser.id,
+              name: dbUser.name,
+              email: dbUser.email,
+              role: dbUser.role,
+              mustChangePassword: dbUser.mustChangePassword
+            };
+            setUser(userData);
+            refreshSession();
+          } else {
+            // Fallback to localStorage for admin user
+            if (session.userId === '1') {
+              const userData = { id: '1', name: 'Admin User', email: 'admin@company.com', role: 'admin' as const };
+              setUser(userData);
+              refreshSession();
+            } else {
+              clearSession();
+            }
+          }
+        } catch (error) {
+          console.error('Auth initialization error:', error);
+          clearSession();
+        }
       }
-    }
-    setIsLoading(false);
+      setIsLoading(false);
+    };
+    
+    initAuth();
   }, []);
 
   const login = async (email: string, password: string): Promise<LoginResult> => {
     setIsLoading(true);
     try {
+      // Try DynamoDB first
+      const dbUser = await dynamoUserService.getUserByEmail(email);
+      if (dbUser && verifyPassword(password, dbUser.passwordHash)) {
+        const userData = {
+          id: dbUser.id,
+          name: dbUser.name,
+          email: dbUser.email,
+          role: dbUser.role,
+          mustChangePassword: dbUser.mustChangePassword
+        };
+        
+        if (dbUser.mustChangePassword) {
+          setPendingPasswordChange(userData);
+          return { success: true, mustChangePassword: true, user: userData };
+        }
+        
+        if (dbUser.twoFactorEnabled) {
+          setPendingTwoFactor(userData);
+          return { success: true, requiresTwoFactor: true, user: userData };
+        }
+        
+        setUser(userData);
+        createSession(userData.id, userData.email);
+        return { success: true, user: userData };
+      }
+      
+      // Fallback to localStorage for existing users and admin
       const storedCredentials = JSON.parse(localStorage.getItem('user_credentials') || '{}');
       const storedUsers = JSON.parse(localStorage.getItem('app_users') || '[]');
       
       if (email === 'admin@company.com') {
-        const adminHash = hashPassword('admin123');
-        if (verifyPassword(password, adminHash)) {
-          const userData = { id: '1', name: 'Admin User', email: 'admin@company.com', role: 'admin' as const };
+        // const adminHash = hashPassword('admin123');
+        // if (verifyPassword(password, adminHash)) {
+        //   const userData = { id: '1', name: 'Admin User', email: 'admin@company.com', role: 'admin' as const };
           
-          // Check if 2FA is enabled
-          const twoFactorData = localStorage.getItem(`2fa_${userData.id}`);
-          if (twoFactorData) {
-            setPendingTwoFactor(userData);
-            return { success: true, requiresTwoFactor: true, user: userData };
-          }
+        //   const twoFactorData = localStorage.getItem(`2fa_${userData.id}`);
+        //   if (twoFactorData) {
+        //     setPendingTwoFactor(userData);
+        //     return { success: true, requiresTwoFactor: true, user: userData };
+        //   }
           
-          setUser(userData);
-          createSession(userData.id, userData.email);
-          return { success: true, user: userData };
-        }
+        //   setUser(userData);
+        //   createSession(userData.id, userData.email);
+        //   return { success: true, user: userData };
+        // }
       }
       
       const foundUser = storedUsers.find((u: any) => u.email === email);
@@ -100,7 +147,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return { success: true, mustChangePassword: true, user: foundUser };
           }
           
-          // Check if 2FA is enabled
           const twoFactorData = localStorage.getItem(`2fa_${foundUser.id}`);
           if (twoFactorData) {
             setPendingTwoFactor(foundUser);
@@ -113,6 +159,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
       
+      return { success: false };
+    } catch (error) {
+      console.error('Login error:', error);
       return { success: false };
     } finally {
       setIsLoading(false);

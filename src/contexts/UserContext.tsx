@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, CreateUserData } from '@/types/user';
 import { toast } from '@/components/ui/use-toast';
 import { hashPassword } from '@/utils/encryption';
-
+import { dynamoUserService } from '@/services/dynamoUserService';
 interface UserContextType {
   users: User[];
   currentUser: User | null;
@@ -25,108 +25,115 @@ export function useUserContext() {
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser] = useState<User>({
-    id: '1',
-    name: 'Admin User',
-    email: 'admin@company.com',
-    role: 'admin',
-    createdAt: new Date(),
-    status: 'active'
+    UserID: '1',
+    UserName: 'Admin User',
+    Email: 'admin@company.com',
+    Password: 'hashed_password',
+    DateCreated: new Date().toISOString(),
+    IsActive: true,
+    IsAdmin: true,
+    Deleted: false
   });
 
   const [users, setUsers] = useState<User[]>([]);
 
-  // Load users from localStorage and listen for changes
+  // Load users from DynamoDB and localStorage
   useEffect(() => {
-    const loadUsers = () => {
-      const storedUsers = localStorage.getItem('app_users');
-      if (storedUsers) {
-        const parsedUsers = JSON.parse(storedUsers).map((user: any) => ({
-          ...user,
-          createdAt: new Date(user.createdAt)
-        }));
-        setUsers([currentUser, ...parsedUsers.filter((u: User) => u.id !== currentUser.id)]);
-      } else {
-        setUsers([
-          currentUser,
-          {
-            id: '2',
-            name: 'John Doe',
-            email: 'john@company.com',
-            role: 'user',
-            createdAt: new Date(),
-            status: 'active'
-          }
-        ]);
+    const loadUsers = async () => {
+      try {
+        // Try to load from DynamoDB first
+        const dbUsers = await dynamoUserService.getAllUsers();
+        if (dbUsers.length > 0) {
+          setUsers([currentUser, ...dbUsers.filter((u: User) => u.UserID !== currentUser.UserID)]);
+          return;
+        }
+      } catch (error) {
+        console.error('Error loading users from DynamoDB:', error);
       }
+
+      // Fallback to localStorage with default users
+      setUsers([
+        currentUser,
+        {
+          UserID: '2',
+          UserName: 'John Doe',
+          Email: 'john@company.com',
+          Password: 'hashed_password',
+          DateCreated: new Date().toISOString(),
+          IsActive: true,
+          IsAdmin: false,
+          Deleted: false
+        }
+      ]);
     };
 
     loadUsers();
-
-    // Listen for storage changes to update users when password is changed
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'app_users') {
-        loadUsers();
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  // Save users to localStorage whenever users change
+  // Save users to localStorage for backward compatibility
   useEffect(() => {
     localStorage.setItem('app_users', JSON.stringify(users));
   }, [users]);
 
-  const createUser = (userData: CreateUserData) => {
+  const createUser = async (userData: CreateUserData) => {
     const newUser: User = {
-      id: Date.now().toString(),
-      ...userData,
-      createdAt: new Date(),
-      status: 'active'
+      UserID: Date.now().toString(),
+      UserName: userData.UserName,
+      Email: userData.Email,
+      Password: hashPassword('tempPassword123'),
+      DateCreated: new Date().toISOString(),
+      IsActive: true,
+      IsAdmin: userData.IsAdmin,
+      Deleted: false,
+      mustChangePassword: true
     };
+    
+    try {
+      // Try to save to DynamoDB
+      const success = await dynamoUserService.createUser(newUser);
+      if (success) {
+        setUsers(prev => [...prev, newUser]);
+        toast({ title: 'User created successfully in DynamoDB' });
+        return;
+      }
+    } catch (error) {
+      console.error('Error creating user in DynamoDB:', error);
+    }
+    
+    // Fallback to localStorage
     setUsers(prev => [...prev, newUser]);
-    toast({ title: 'User created successfully' });
   };
-
   const removeUser = (userId: string) => {
-    if (userId === currentUser.id) {
+    if (userId === currentUser.UserID) {
       toast({ title: 'Cannot delete current user', variant: 'destructive' });
       return;
     }
-    setUsers(prev => prev.filter(user => user.id !== userId));
-    
-    const credentials = JSON.parse(localStorage.getItem('user_credentials') || '{}');
-    delete credentials[userId];
-    localStorage.setItem('user_credentials', JSON.stringify(credentials));
-    
+    setUsers(prev => prev.filter(user => user.UserID !== userId));
     toast({ title: 'User removed successfully' });
   };
 
   const updateUserRole = (userId: string, role: 'admin' | 'user') => {
     setUsers(prev => prev.map(user => 
-      user.id === userId ? { ...user, role } : user
+      user.UserID === userId ? { ...user, IsAdmin: role === 'admin' } : user
     ));
     toast({ title: 'User role updated successfully' });
   };
 
   const setUserPassword = async (userId: string, password: string, mustChangePassword?: boolean) => {
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const user = users.find(u => u.id === userId);
+      const user = users.find(u => u.UserID === userId);
       if (!user) {
         throw new Error('User not found');
       }
       
       const hashedPassword = hashPassword(password);
       
-      const credentials = JSON.parse(localStorage.getItem('user_credentials') || '{}');
-      credentials[userId] = hashedPassword;
-      localStorage.setItem('user_credentials', JSON.stringify(credentials));
+      // Update user in DynamoDB
+      const updatedUser = { ...user, Password: hashedPassword };
+      await dynamoUserService.updateUser(updatedUser);
       
       setUsers(prev => prev.map(u => 
-        u.id === userId ? { ...u, mustChangePassword } : u
+        u.UserID === userId ? updatedUser : u
       ));
       
       toast({ title: 'Password set successfully' });
@@ -138,7 +145,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const isAdmin = () => currentUser?.role === 'admin';
+  const isAdmin = () => currentUser?.IsAdmin === true;
 
   return (
     <UserContext.Provider value={{

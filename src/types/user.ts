@@ -1,17 +1,23 @@
 export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: 'admin' | 'user';
-  createdAt: Date;
+  UserID: string;
+  UserName: string;
+  Email: string;
+  Password: string;
+  DateCreated: string;
+  IsActive: boolean;
+  IsAdmin: boolean;
+  Deleted: boolean;
+  passwordHash?: string;
   lastLogin?: Date;
-  status: 'active' | 'inactive';
   mustChangePassword?: boolean;
+  twoFactorEnabled?: boolean;
+  twoFactorSecret?: string;
+  backupCodes?: string[];
 }
 
 export interface CreateUserData {
-  name: string;
-  email: string;
-  role: 'admin' | 'user';
+  UserName: string;
+  Email: string;
+  IsAdmin: boolean;
   mustChangePassword?: boolean;
 }
