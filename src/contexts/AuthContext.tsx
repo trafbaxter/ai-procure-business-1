@@ -94,7 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       // Try DynamoDB first
       const dbUser = await dynamoUserService.getUserByEmail(email);
-      if (dbUser && verifyPassword(password, dbUser.passwordHash)) {
+      if (dbUser && await verifyPassword(password, dbUser.passwordHash)) {
         const userData = {
           id: dbUser.id,
           name: dbUser.name,
@@ -141,7 +141,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       const foundUser = storedUsers.find((u: any) => u.email === email);
       if (foundUser && storedCredentials[foundUser.id]) {
-        if (verifyPassword(password, storedCredentials[foundUser.id])) {
+        if (await verifyPassword(password, storedCredentials[foundUser.id])) {
           if (foundUser.mustChangePassword) {
             setPendingPasswordChange(foundUser);
             return { success: true, mustChangePassword: true, user: foundUser };
@@ -203,11 +203,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const targetUser = pendingPasswordChange || user;
     const storedCredentials = JSON.parse(localStorage.getItem('user_credentials') || '{}');
     
-    if (!verifyPassword(currentPassword, storedCredentials[targetUser!.id])) {
+    if (!(await verifyPassword(currentPassword, storedCredentials[targetUser!.id]))) {
       return false;
     }
     
-    const hashedPassword = hashPassword(newPassword);
+    const hashedPassword = await hashPassword(newPassword);
     storedCredentials[targetUser!.id] = hashedPassword;
     localStorage.setItem('user_credentials', JSON.stringify(storedCredentials));
     
@@ -258,7 +258,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const tokenData = emailService.validateResetToken(token);
     if (!tokenData) return false;
 
-    const hashedPassword = hashPassword(newPassword);
+    const hashedPassword = await hashPassword(newPassword);
     const storedCredentials = JSON.parse(localStorage.getItem('user_credentials') || '{}');
     storedCredentials[tokenData.userId] = hashedPassword;
     localStorage.setItem('user_credentials', JSON.stringify(storedCredentials));

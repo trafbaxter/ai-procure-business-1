@@ -80,7 +80,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       UserID: Date.now().toString(),
       UserName: userData.UserName,
       Email: userData.Email,
-      Password: hashPassword('tempPassword123'),
+      Password: await hashPassword('tempPassword123'),
       DateCreated: new Date().toISOString(),
       IsActive: true,
       IsAdmin: userData.IsAdmin,
@@ -126,7 +126,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error('User not found');
       }
       
-      const hashedPassword = hashPassword(password);
+      const hashedPassword = await hashPassword(password);
       
       // Update user in DynamoDB
       const updatedUser = { ...user, Password: hashedPassword };
