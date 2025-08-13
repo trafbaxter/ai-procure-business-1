@@ -99,29 +99,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const dbUser = await dynamoUserService.getUserByEmail(email);
       console.log('🔧 DynamoDB user found:', !!dbUser);
       
-      if (dbUser && await verifyPassword(password, dbUser.Password)) {
-        console.log('🔧 DynamoDB login successful');
-        const userData = {
-          id: dbUser.UserID,
-          name: dbUser.UserName,
-          email: dbUser.Email,
-          role: dbUser.IsAdmin ? 'admin' as const : 'user' as const,
-          mustChangePassword: dbUser.mustChangePassword
-        };
+      if (dbUser) {
+        console.log('🔧 DynamoDB user password verification...');
+        const passwordMatch = await verifyPassword(password, dbUser.Password);
+        console.log('🔧 DynamoDB password match:', passwordMatch);
         
-        if (dbUser.mustChangePassword) {
-          setPendingPasswordChange(userData);
-          return { success: true, mustChangePassword: true, user: userData };
+        if (passwordMatch) {
+          console.log('🔧 DynamoDB login successful');
+          const userData = {
+            id: dbUser.UserID,
+            name: dbUser.UserName,
+            email: dbUser.Email,
+            role: dbUser.IsAdmin ? 'admin' as const : 'user' as const,
+            mustChangePassword: dbUser.mustChangePassword
+          };
+          
+          if (dbUser.mustChangePassword) {
+            setPendingPasswordChange(userData);
+            return { success: true, mustChangePassword: true, user: userData };
+          }
+          
+          if (dbUser.twoFactorEnabled) {
+            setPendingTwoFactor(userData);
+            return { success: true, requiresTwoFactor: true, user: userData };
+          }
+          
+          setUser(userData);
+          createSession(userData.id, userData.email);
+          return { success: true, user: userData };
+        } else {
+          console.log('🔧 DynamoDB password verification failed');
         }
-        
-        if (dbUser.twoFactorEnabled) {
-          setPendingTwoFactor(userData);
-          return { success: true, requiresTwoFactor: true, user: userData };
-        }
-        
-        setUser(userData);
-        createSession(userData.id, userData.email);
-        return { success: true, user: userData };
       }
       
       // Fallback to localStorage for existing users
