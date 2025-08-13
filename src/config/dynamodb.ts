@@ -1,10 +1,10 @@
 // DynamoDB Configuration
 export const DYNAMODB_CONFIG = {
-  region: process.env.REACT_APP_AWS_REGION || 'us-east-1',
+  region: import.meta.env.VITE_AWS_REGION || 'us-east-1',
   tables: {
-    users: process.env.REACT_APP_DYNAMODB_USERS_TABLE || 'Users',
-    sessions: process.env.REACT_APP_DYNAMODB_SESSIONS_TABLE || 'Sessions',
-    apiKeys: process.env.REACT_APP_DYNAMODB_API_KEYS_TABLE || 'ApiKeys'
+    users: import.meta.env.VITE_DYNAMODB_USERS_TABLE || 'Procurement-Users',
+    sessions: import.meta.env.VITE_DYNAMODB_SESSIONS_TABLE || 'Procurement-Sessions',
+    apiKeys: import.meta.env.VITE_DYNAMODB_API_KEYS_TABLE || 'Procurement-ApiKeys'
   },
   indexes: {
     emailIndex: 'EmailIndex',
@@ -14,8 +14,8 @@ export const DYNAMODB_CONFIG = {
 
 // Environment check
 export const isDynamoDBEnabled = () => {
-  return !!(process.env.REACT_APP_AWS_ACCESS_KEY_ID && 
-           process.env.REACT_APP_AWS_SECRET_ACCESS_KEY);
+  return !!(import.meta.env.VITE_AWS_ACCESS_KEY_ID && 
+           import.meta.env.VITE_AWS_SECRET_ACCESS_KEY);
 };
 
 // Fallback mode configuration
