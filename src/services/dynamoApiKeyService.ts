@@ -12,7 +12,7 @@ export interface ApiKey {
   keyHash: string;
   createdAt: string;
   expiresAt?: string;
-  isActive: boolean;
+const TABLE_NAME = import.meta.env.VITE_DYNAMODB_API_KEYS_TABLE || 'Procurement-ApiKeys';
   permissions: string[];
 }
 
@@ -23,7 +23,7 @@ export const dynamoApiKeyService = {
     try {
       const result = await docClient.send(new ScanCommand({
         TableName: DYNAMODB_CONFIG.tables.apiKeys,
-        FilterExpression: 'ApiKeyID = :apiKeyId AND App = :app',
+        FilterExpression: 'ApiKeyID = :apiKeyId',
         ExpressionAttributeValues: {
           ':apiKeyId': ApiKeyID,
           ':app': 'Procurement'
@@ -41,11 +41,7 @@ export const dynamoApiKeyService = {
     
     try {
       const result = await docClient.send(new ScanCommand({
-        TableName: DYNAMODB_CONFIG.tables.apiKeys,
-        FilterExpression: 'App = :app',
-        ExpressionAttributeValues: {
-          ':app': 'Procurement'
-        }
+        TableName: DYNAMODB_CONFIG.tables.apiKeys
       }));
       return result.Items as ApiKey[] || [];
     } catch (error) {
@@ -60,7 +56,7 @@ export const dynamoApiKeyService = {
     try {
       await docClient.send(new PutCommand({
         TableName: DYNAMODB_CONFIG.tables.apiKeys,
-        Item: { ...apiKey, App: 'Procurement' }
+        Item: { ...apiKey }
       }));
       return true;
     } catch (error) {

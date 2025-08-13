@@ -69,14 +69,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUser(userData);
             refreshSession();
           } else {
-            // Fallback to localStorage for admin user
-            if (session.userId === '1') {
-              const userData = { id: '1', name: 'Admin User', email: 'admin@company.com', role: 'admin' as const };
-              setUser(userData);
-              refreshSession();
-            } else {
+            // Comment out default admin user fallback
+            // if (session.userId === '1') {
+            //   const userData = { id: '1', name: 'Admin User', email: 'admin@company.com', role: 'admin' as const };
+            //   setUser(userData);
+            //   refreshSession();
+            // } else {
               clearSession();
-            }
+            // }
           }
         } catch (error) {
           console.error('Auth initialization error:', error);
@@ -123,20 +123,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const storedUsers = JSON.parse(localStorage.getItem('app_users') || '[]');
       
       if (email === 'admin@company.com') {
-        const adminHash = hashPassword('admin123');
-        if (verifyPassword(password, adminHash)) {
-          const userData = { id: '1', name: 'Admin User', email: 'admin@company.com', role: 'admin' as const };
+        // const adminHash = hashPassword('admin123');
+        // if (verifyPassword(password, adminHash)) {
+        //   const userData = { id: '1', name: 'Admin User', email: 'admin@company.com', role: 'admin' as const };
           
-          const twoFactorData = localStorage.getItem(`2fa_${userData.id}`);
-          if (twoFactorData) {
-            setPendingTwoFactor(userData);
-            return { success: true, requiresTwoFactor: true, user: userData };
-          }
+        //   const twoFactorData = localStorage.getItem(`2fa_${userData.id}`);
+        //   if (twoFactorData) {
+        //     setPendingTwoFactor(userData);
+        //     return { success: true, requiresTwoFactor: true, user: userData };
+        //   }
           
-          setUser(userData);
-          createSession(userData.id, userData.email);
-          return { success: true, user: userData };
-        }
+        //   setUser(userData);
+        //   createSession(userData.id, userData.email);
+        //   return { success: true, user: userData };
+        // }
       }
       
       const foundUser = storedUsers.find((u: any) => u.email === email);
@@ -244,8 +244,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetPassword = async (email: string): Promise<boolean> => {
     const storedUsers = JSON.parse(localStorage.getItem('app_users') || '[]');
-    const foundUser = storedUsers.find((u: any) => u.email === email) || 
-      (email === 'admin@company.com' ? { id: '1', email } : null);
+    const foundUser = storedUsers.find((u: any) => u.email === email);
+    // Comment out admin user fallback: || (email === 'admin@company.com' ? { id: '1', email } : null);
     
     if (foundUser) {
       const resetToken = emailService.generateResetToken(email, foundUser.id);

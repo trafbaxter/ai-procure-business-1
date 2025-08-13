@@ -60,6 +60,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             status: user.IsActive ? 'active' : 'inactive',
             createdAt: new Date(user.DateCreated)
           }));
+          //setUsers([currentUser, ...formattedUsers.filter((u: any) => u.UserID !== currentUser.UserID)]);
           setUsers([currentUser, ...formattedUsers.filter((u: any) => u.UserID !== currentUser.UserID)]);
           return;
         }
@@ -103,7 +104,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         UserID: Date.now().toString(),
         UserName: userData.name, // Map name to UserName
         Email: userData.email, // Map email to Email
-        Password: await hashPassword('tempPassword123'),
+        Password: await hashPassword('Gdne*D$O2@2DW6'),
         DateCreated: new Date().toISOString(),
         IsActive: true,
         IsAdmin: userData.role === 'admin', // Map role to IsAdmin

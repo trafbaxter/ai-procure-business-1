@@ -12,7 +12,7 @@ const client = new DynamoDBClient({
 });
 
 const docClient = DynamoDBDocumentClient.from(client);
-const TABLE_NAME = import.meta.env.VITE_DYNAMODB_USERS_TABLE || 'Users';
+const TABLE_NAME = import.meta.env.VITE_DYNAMODB_USERS_TABLE || 'Procurement-Users';
 
 console.log('🔧 DynamoDB Configuration Check:', { 
   region: import.meta.env.VITE_AWS_REGION,
@@ -26,7 +26,6 @@ export const dynamoUserService = {
       const command = new PutCommand({
         TableName: TABLE_NAME,
         Item: {
-          App: 'Procurement',
           UserID: user.UserID,
           Email: user.Email, // Sort key
           Name: user.UserName, // Name field for DynamoDB
@@ -52,13 +51,11 @@ export const dynamoUserService = {
       // Since we need both UserID and Email for composite key, scan instead
       const command = new ScanCommand({
         TableName: TABLE_NAME,
-        FilterExpression: 'UserID = :userId AND App = :app',
+        FilterExpression: 'UserID = :userId',
         ExpressionAttributeValues: {
           ':userId': userId,
-          ':app': 'Procurement',
         },
       });
-
       const result = await docClient.send(command);
       return result.Items?.[0] as User || null;
     } catch (error) {
@@ -71,10 +68,9 @@ export const dynamoUserService = {
     try {
       const command = new ScanCommand({
         TableName: TABLE_NAME,
-        FilterExpression: 'Email = :email AND App = :app',
+        FilterExpression: 'Email = :email',
         ExpressionAttributeValues: {
           ':email': email,
-          ':app': 'Procurement',
         },
       });
 
@@ -90,13 +86,11 @@ export const dynamoUserService = {
     try {
       const command = new ScanCommand({
         TableName: TABLE_NAME,
-        FilterExpression: '(attribute_not_exists(Deleted) OR Deleted = :deleted) AND App = :app',
+        FilterExpression: '(attribute_not_exists(Deleted) OR Deleted = :deleted)',
         ExpressionAttributeValues: {
           ':deleted': false,
-          ':app': 'Procurement',
         },
       });
-
       const result = await docClient.send(command);
       return result.Items as User[] || [];
     } catch (error) {

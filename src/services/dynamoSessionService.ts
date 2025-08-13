@@ -20,10 +20,9 @@ export const dynamoSessionService = {
     try {
       const result = await docClient.send(new ScanCommand({
         TableName: DYNAMODB_CONFIG.tables.sessions,
-        FilterExpression: 'SessionID = :sessionId AND App = :app',
+        FilterExpression: 'SessionID = :sessionId',
         ExpressionAttributeValues: {
-          ':sessionId': SessionID,
-          ':app': 'Procurement'
+          ':sessionId': SessionID
         }
       }));
       return result.Items?.[0] as Session || null;
@@ -39,7 +38,7 @@ export const dynamoSessionService = {
     try {
       await docClient.send(new PutCommand({
         TableName: DYNAMODB_CONFIG.tables.sessions,
-        Item: { ...session, App: 'Procurement' }
+        Item: { ...session}
       }));
       return true;
     } catch (error) {

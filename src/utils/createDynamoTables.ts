@@ -9,7 +9,7 @@ const client = new DynamoDBClient({
 });
 
 export async function createUsersTable(): Promise<boolean> {
-  const tableName = import.meta.env.VITE_DYNAMODB_USERS_TABLE || 'Users';
+  const tableName = import.meta.env.VITE_DYNAMODB_USERS_TABLE || 'Procurement-Users';
   
   try {
     // Check if table exists
@@ -29,19 +29,9 @@ export async function createUsersTable(): Promise<boolean> {
       ],
       AttributeDefinitions: [
         { AttributeName: 'UserID', AttributeType: 'S' },
-        { AttributeName: 'Email', AttributeType: 'S' },
-        { AttributeName: 'App', AttributeType: 'S' }
+        { AttributeName: 'Email', AttributeType: 'S' }
       ],
-      BillingMode: 'PAY_PER_REQUEST',
-      GlobalSecondaryIndexes: [
-        {
-          IndexName: 'AppIndex',
-          KeySchema: [
-            { AttributeName: 'App', KeyType: 'HASH' }
-          ],
-          Projection: { ProjectionType: 'ALL' }
-        }
-      ]
+      BillingMode: 'PAY_PER_REQUEST'
     });
 
     await client.send(command);
@@ -54,7 +44,7 @@ export async function createUsersTable(): Promise<boolean> {
 }
 
 export async function createApiKeysTable(): Promise<boolean> {
-  const tableName = import.meta.env.VITE_DYNAMODB_API_KEYS_TABLE || 'ApiKeys';
+  const tableName = import.meta.env.VITE_DYNAMODB_API_KEYS_TABLE || 'Procurement-ApiKeys';
   
   try {
     try {
@@ -71,19 +61,9 @@ export async function createApiKeysTable(): Promise<boolean> {
         { AttributeName: 'KeyID', KeyType: 'HASH' }
       ],
       AttributeDefinitions: [
-        { AttributeName: 'KeyID', AttributeType: 'S' },
-        { AttributeName: 'App', AttributeType: 'S' }
+        { AttributeName: 'KeyID', AttributeType: 'S' }
       ],
-      BillingMode: 'PAY_PER_REQUEST',
-      GlobalSecondaryIndexes: [
-        {
-          IndexName: 'AppIndex',
-          KeySchema: [
-            { AttributeName: 'App', KeyType: 'HASH' }
-          ],
-          Projection: { ProjectionType: 'ALL' }
-        }
-      ]
+      BillingMode: 'PAY_PER_REQUEST'
     });
 
     await client.send(command);
@@ -96,7 +76,7 @@ export async function createApiKeysTable(): Promise<boolean> {
 }
 
 export async function createSessionsTable(): Promise<boolean> {
-  const tableName = import.meta.env.VITE_DYNAMODB_SESSIONS_TABLE || 'Sessions';
+  const tableName = import.meta.env.VITE_DYNAMODB_SESSIONS_TABLE || 'Procurement-Sessions';
   
   try {
     try {
@@ -113,19 +93,9 @@ export async function createSessionsTable(): Promise<boolean> {
         { AttributeName: 'SessionID', KeyType: 'HASH' }
       ],
       AttributeDefinitions: [
-        { AttributeName: 'SessionID', AttributeType: 'S' },
-        { AttributeName: 'App', AttributeType: 'S' }
+        { AttributeName: 'SessionID', AttributeType: 'S' }
       ],
-      BillingMode: 'PAY_PER_REQUEST',
-      GlobalSecondaryIndexes: [
-        {
-          IndexName: 'AppIndex',
-          KeySchema: [
-            { AttributeName: 'App', KeyType: 'HASH' }
-          ],
-          Projection: { ProjectionType: 'ALL' }
-        }
-      ]
+      BillingMode: 'PAY_PER_REQUEST'
     });
 
     await client.send(command);
