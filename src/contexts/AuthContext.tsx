@@ -139,10 +139,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.log('🔧 Plain text password match - updating to hashed');
             // Update to hashed password
             const hashedPassword = await hashPassword(password);
-            await dynamoUserService.updateUser({
+            const updatedUser = {
               ...dbUser,
+              UserName: dbUser.UserName || dbUser.Name || 'Unknown User', // Ensure UserName exists
               Password: hashedPassword
-            });
+            };
+            await dynamoUserService.updateUser(updatedUser);
             
             const userData = {
               id: dbUser.UserID,
