@@ -45,9 +45,9 @@ const UserDropdown: React.FC = () => {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={user.avatar} alt={user.UserName || user.Email} />
+            <AvatarImage src={user.avatar} alt={user.Name || user.Email} />
             <AvatarFallback className="bg-white/10 text-white">
-              {(user.UserName || user.Email || 'U').charAt(0).toUpperCase()}
+              {(user.Name || user.Email || 'U').charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
         </Button>
@@ -55,7 +55,7 @@ const UserDropdown: React.FC = () => {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel className="flex items-center justify-between">
           <div>
-            <div className="font-medium">{user.UserName || user.Email}</div>
+            <div className="font-medium">{user.Name || user.Email}</div>
             <div className="text-xs text-muted-foreground">{user.Email}</div>
           </div>
           <Badge variant={user.IsAdmin ? 'default' : 'secondary'}>

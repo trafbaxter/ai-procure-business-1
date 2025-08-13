@@ -61,7 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (dbUser) {
             const userData = {
               id: dbUser.UserID,
-              name: dbUser.UserName,
+              name: dbUser.Name,
               email: dbUser.Email,
               role: dbUser.IsAdmin ? 'admin' as const : 'user' as const,
               mustChangePassword: dbUser.mustChangePassword
@@ -112,7 +112,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.log('🔧 DynamoDB login successful');
           const userData = {
             id: dbUser.UserID,
-            name: dbUser.UserName,
+            name: dbUser.Name,
             email: dbUser.Email,
             role: dbUser.IsAdmin ? 'admin' as const : 'user' as const,
             mustChangePassword: dbUser.mustChangePassword
@@ -141,14 +141,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const hashedPassword = await hashPassword(password);
             const updatedUser = {
               ...dbUser,
-              UserName: dbUser.UserName || dbUser.Name || 'Unknown User', // Ensure UserName exists
+              Name: dbUser.Name || 'Unknown User', // Ensure Name exists
               Password: hashedPassword
             };
             await dynamoUserService.updateUser(updatedUser);
             
             const userData = {
               id: dbUser.UserID,
-              name: dbUser.UserName,
+              name: dbUser.Name,
               email: dbUser.Email,
               role: dbUser.IsAdmin ? 'admin' as const : 'user' as const,
               mustChangePassword: dbUser.mustChangePassword

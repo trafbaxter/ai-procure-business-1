@@ -28,7 +28,7 @@ export const dynamoUserService = {
         Item: {
           UserID: user.UserID,
           Email: user.Email, // Sort key
-          Name: user.UserName, // Name field for DynamoDB
+          Name: user.Name, // Name field for DynamoDB
           Password: user.Password,
           DateCreated: user.DateCreated,
           IsActive: user.IsActive,

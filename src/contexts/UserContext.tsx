@@ -26,7 +26,7 @@ export function useUserContext() {
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser] = useState<User>({
     UserID: '1',
-    UserName: 'Admin User',
+    Name: 'Admin User',
     Email: 'admin@company.com',
     Password: 'hashed_password',
     DateCreated: new Date().toISOString(),
@@ -73,7 +73,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         currentUser,
         {
           UserID: '2',
-          UserName: 'John Doe',
+          Name: 'John Doe',
           Email: 'john@company.com',
           Password: 'hashed_password',
           DateCreated: new Date().toISOString(),
@@ -102,7 +102,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Map UI fields to DynamoDB fields
       const newUser: User = {
         UserID: Date.now().toString(),
-        UserName: userData.name, // Map name to UserName
+        Name: userData.name, // Map name to Name
         Email: userData.email, // Map email to Email
         Password: await hashPassword('Gdne*D$O2@2DW6'),
         DateCreated: new Date().toISOString(),
@@ -133,7 +133,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Fallback to localStorage
     const newUser: User = {
       UserID: Date.now().toString(),
-      UserName: userData.name,
+      Name: userData.name,
       Email: userData.email,
       Password: await hashPassword('tempPassword123'),
       DateCreated: new Date().toISOString(),

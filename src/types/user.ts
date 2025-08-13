@@ -1,6 +1,6 @@
 export interface User {
   UserID: string;
-  UserName: string;
+  Name: string;
   Email: string;
   Password: string;
   DateCreated: string;
@@ -19,7 +19,7 @@ export interface CreateUserData {
   name: string; // UI field name
   email: string; // UI field name
   role: 'admin' | 'user'; // UI field name
-  UserName?: string; // DynamoDB field name (mapped from name)
+
   Email?: string; // DynamoDB field name (mapped from email)
   IsAdmin?: boolean; // DynamoDB field name (mapped from role)
   mustChangePassword?: boolean;
