@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,16 +16,7 @@ const LoginForm = () => {
   const [error, setError] = useState('');
   const [useBackupCode, setUseBackupCode] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
-  const errorRef = useRef<string>('');
   const { login, verifyTwoFactor, isLoading, pendingPasswordChange, pendingTwoFactor } = useAuth();
-
-  // Use effect to ensure error persists through re-renders
-  useEffect(() => {
-    if (errorRef.current && !error) {
-      console.log('🔧 Restoring error from ref:', errorRef.current);
-      setError(errorRef.current);
-    }
-  }, [isLoading]); // Remove error from dependencies to avoid loops
 
   // If there's a pending password change, show the change password form
   if (pendingPasswordChange) {
@@ -124,7 +115,6 @@ const LoginForm = () => {
     e.preventDefault();
     console.log('🔧 Starting login, clearing error state');
     setError('');
-    errorRef.current = ''; // Clear ref as well
     
     try {
       const result = await login(email, password);
@@ -133,29 +123,23 @@ const LoginForm = () => {
         // Use specific message if provided, otherwise use generic message
         const errorMessage = result.message || 'Invalid email or password. Please try again.';
         console.log('🔧 Setting error message:', errorMessage);
-        errorRef.current = errorMessage; // Store in ref to persist through re-renders
         setError(errorMessage);
-        console.log('🔧 Error state after setting:', error);
         
-        // Force error to show with a small delay to ensure state is updated
+        // Add a small delay to ensure the error state is properly set
         setTimeout(() => {
-          console.log('🔧 Timeout check - errorRef:', errorRef.current, 'error state:', error);
-          if (errorRef.current && !error) {
-            console.log('🔧 Forcing error display');
-            setError(errorRef.current);
+          console.log('🔧 Error state after timeout:', error);
+          // Force a re-render by setting the error again if it's empty
+          if (!error) {
+            console.log('🔧 Force setting error again');
+            setError(errorMessage);
           }
-        }, 50);
-      } else {
-        // Clear error on successful login
-        errorRef.current = '';
-        setError('');
+        }, 100);
       }
       // If requiresTwoFactor is true, the pendingTwoFactor state will be set
       // and the component will re-render to show the 2FA form
     } catch (err) {
       console.error('🔧 Login error:', err);
       const errorMessage = 'An error occurred during login. Please try again.';
-      errorRef.current = errorMessage;
       setError(errorMessage);
     }
   };
