@@ -207,14 +207,21 @@ export const dynamoUserService = {
       });
 
       await docClient.send(command);
+      
+      // Send approval email
+      const { emailService } = await import('./emailService');
+      const user = await this.getUserByEmail(email);
+      if (user) {
+        await emailService.sendAccountApprovedEmail(email, user.Name || email);
+      }
+      
       return true;
     } catch (error) {
       console.error('DynamoDB approveUser error:', error);
       return false;
     }
   },
-
-  async rejectUser(userId: string, email: string): Promise<boolean> {
+  async rejectUser(userId: string, email: string, reason?: string): Promise<boolean> {
     try {
       const command = new UpdateCommand({
         TableName: TABLE_NAME,
@@ -233,6 +240,14 @@ export const dynamoUserService = {
       });
 
       await docClient.send(command);
+      
+      // Send rejection email
+      const { emailService } = await import('./emailService');
+      const user = await this.getUserByEmail(email);
+      if (user) {
+        await emailService.sendAccountRejectedEmail(email, user.Name || email, reason);
+      }
+      
       return true;
     } catch (error) {
       console.error('DynamoDB rejectUser error:', error);

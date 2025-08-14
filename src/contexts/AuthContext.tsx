@@ -18,6 +18,7 @@ interface LoginResult {
   mustChangePassword?: boolean;
   requiresTwoFactor?: boolean;
   user?: User;
+  message?: string; // Add message field for specific error messages
 }
 
 interface AuthContextType {
@@ -102,12 +103,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Check if user is approved
         if (dbUser.status === 'pending' || (dbUser.approved === false && dbUser.status !== 'approved')) {
           console.log('🔧 User account pending approval');
-          return { success: false };
+          return { 
+            success: false, 
+            message: 'Your account is pending approval. Please wait for an administrator to approve your registration.' 
+          };
         }
         
         if (dbUser.status === 'rejected') {
           console.log('🔧 User account has been rejected');
-          return { success: false };
+          return { 
+            success: false, 
+            message: 'Your account registration has been rejected. Please contact an administrator for more information.' 
+          };
         }
         
         console.log('🔧 DynamoDB user password verification...');

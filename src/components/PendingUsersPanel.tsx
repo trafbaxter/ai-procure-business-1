@@ -38,9 +38,10 @@ export const PendingUsersPanel: React.FC = () => {
       if (success) {
         toast({
           title: "User Approved",
-          description: `${user.Name || user.Email} has been approved and can now log in.`
+          description: `${user.Name || user.Email} has been approved and will receive an email notification.`
         });
         loadPendingUsers(); // Refresh the list
+
       } else {
         throw new Error('Failed to approve user');
       }
@@ -60,9 +61,10 @@ export const PendingUsersPanel: React.FC = () => {
       if (success) {
         toast({
           title: "User Rejected",
-          description: `${user.Name || user.Email} has been rejected.`
+          description: `${user.Name || user.Email} has been rejected and will receive an email notification.`
         });
         loadPendingUsers(); // Refresh the list
+
       } else {
         throw new Error('Failed to reject user');
       }

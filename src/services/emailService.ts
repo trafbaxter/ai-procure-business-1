@@ -206,6 +206,85 @@ class EmailService {
     }
   }
 
+  async sendAccountApprovedEmail(email: string, name: string): Promise<boolean> {
+    console.log(`📨 Sending account approved email to: ${email}`);
+    
+    const emailTemplate: EmailTemplate = {
+      to: email,
+      subject: 'Account Approved - Procurement System',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #28a745;">Account Approved!</h2>
+          <p>Hello ${name},</p>
+          <p>Great news! Your account for the Procurement System has been approved by an administrator.</p>
+          <p>You can now log in to your account using your email and password.</p>
+          <a href="${window.location.origin}" style="background-color: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">Login Now</a>
+          <p>Welcome to the Procurement System!</p>
+        </div>
+      `,
+      text: `
+        Account Approved!
+        
+        Hello ${name},
+        
+        Great news! Your account for the Procurement System has been approved by an administrator.
+        
+        You can now log in to your account using your email and password.
+        
+        Login at: ${window.location.origin}
+        
+        Welcome to the Procurement System!
+      `
+    };
+
+    if (isAwsConfigured()) {
+      return await this.sendEmailWithSES(emailTemplate);
+    } else {
+      console.warn('⚠️ AWS SES not configured, using mock email service');
+      return await this.sendEmailMock(emailTemplate);
+    }
+  }
+
+  async sendAccountRejectedEmail(email: string, name: string, reason?: string): Promise<boolean> {
+    console.log(`📨 Sending account rejected email to: ${email}`);
+    
+    const reasonText = reason ? `\n\nReason: ${reason}` : '';
+    
+    const emailTemplate: EmailTemplate = {
+      to: email,
+      subject: 'Account Registration - Procurement System',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #dc3545;">Account Registration Update</h2>
+          <p>Hello ${name},</p>
+          <p>We regret to inform you that your account registration for the Procurement System has not been approved at this time.</p>
+          ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ''}
+          <p>If you believe this is an error or would like to discuss this decision, please contact your system administrator.</p>
+          <p>Thank you for your interest in the Procurement System.</p>
+        </div>
+      `,
+      text: `
+        Account Registration Update
+        
+        Hello ${name},
+        
+        We regret to inform you that your account registration for the Procurement System has not been approved at this time.
+        ${reasonText}
+        
+        If you believe this is an error or would like to discuss this decision, please contact your system administrator.
+        
+        Thank you for your interest in the Procurement System.
+      `
+    };
+
+    if (isAwsConfigured()) {
+      return await this.sendEmailWithSES(emailTemplate);
+    } else {
+      console.warn('⚠️ AWS SES not configured, using mock email service');
+      return await this.sendEmailMock(emailTemplate);
+    }
+  }
+
   getSentEmails(): any[] {
     return JSON.parse(localStorage.getItem('demo_sent_emails') || '[]');
   }
