@@ -27,14 +27,15 @@ export const dynamoUserService = {
         TableName: TABLE_NAME,
         Item: {
           UserID: user.UserID,
-          Email: user.Email, // Sort key
-          Name: user.Name, // Name field for DynamoDB
+          Email: user.Email,
+          Name: user.Name,
           Password: user.Password,
           DateCreated: user.DateCreated,
           IsActive: user.IsActive,
           IsAdmin: user.IsAdmin,
           Deleted: user.Deleted || false,
           mustChangePassword: user.mustChangePassword || false,
+          twoFactorEnabled: user.twoFactorEnabled || false,
         },
       });
 
@@ -48,7 +49,6 @@ export const dynamoUserService = {
 
   async getUserById(userId: string): Promise<User | null> {
     try {
-      // Since we need both UserID and Email for composite key, scan instead
       const command = new ScanCommand({
         TableName: TABLE_NAME,
         FilterExpression: 'UserID = :userId',
@@ -77,11 +77,9 @@ export const dynamoUserService = {
       const result = await docClient.send(command);
       const user = result.Items?.[0] as User || null;
       
-      // Add debugging for user data
       if (user) {
         console.log('🔧 Raw DynamoDB user data:', JSON.stringify(user, null, 2));
-        console.log('🔧 User Name field:', user.Name);
-        console.log('🔧 User Email field:', user.Email);
+        console.log('🔧 User 2FA enabled:', user.twoFactorEnabled);
       }
       
       return user;
@@ -92,7 +90,6 @@ export const dynamoUserService = {
   },
 
   async getAllUsers(): Promise<User[]> {
-    // Check if AWS credentials are configured
     if (!import.meta.env.VITE_AWS_ACCESS_KEY_ID || !import.meta.env.VITE_AWS_SECRET_ACCESS_KEY) {
       console.warn('⚠️ AWS credentials not configured, skipping DynamoDB call');
       return [];
@@ -122,7 +119,7 @@ export const dynamoUserService = {
           UserID: user.UserID,
           Email: user.Email,
         },
-        UpdateExpression: 'SET #password = :password, #name = :name, IsActive = :isActive, IsAdmin = :isAdmin, mustChangePassword = :mustChange',
+        UpdateExpression: 'SET #password = :password, #name = :name, IsActive = :isActive, IsAdmin = :isAdmin, mustChangePassword = :mustChange, twoFactorEnabled = :twoFactor',
         ExpressionAttributeNames: {
           '#password': 'Password',
           '#name': 'Name',
@@ -133,6 +130,7 @@ export const dynamoUserService = {
           ':isActive': user.IsActive,
           ':isAdmin': user.IsAdmin,
           ':mustChange': user.mustChangePassword || false,
+          ':twoFactor': user.twoFactorEnabled || false,
         },
       });
 
@@ -140,6 +138,28 @@ export const dynamoUserService = {
       return true;
     } catch (error) {
       console.error('DynamoDB updateUser error:', error);
+      return false;
+    }
+  },
+
+  async updateUserTwoFactor(userId: string, email: string, twoFactorEnabled: boolean): Promise<boolean> {
+    try {
+      const command = new UpdateCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          UserID: userId,
+          Email: email,
+        },
+        UpdateExpression: 'SET twoFactorEnabled = :twoFactor',
+        ExpressionAttributeValues: {
+          ':twoFactor': twoFactorEnabled,
+        },
+      });
+
+      await docClient.send(command);
+      return true;
+    } catch (error) {
+      console.error('DynamoDB updateUserTwoFactor error:', error);
       return false;
     }
   },

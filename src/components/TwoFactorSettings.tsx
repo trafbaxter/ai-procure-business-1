@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Shield, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/components/ui/use-toast';
+import { dynamoUserService } from '@/services/dynamoUserService';
 import TwoFactorSetup from './TwoFactorSetup';
 
 const TwoFactorSettings: React.FC = () => {
@@ -24,11 +25,20 @@ const TwoFactorSettings: React.FC = () => {
   const handleEnable2FA = () => {
     setShowSetup(true);
   };
-
-  const handleDisable2FA = () => {
+  const handleDisable2FA = async () => {
     if (user) {
+      // Remove from localStorage
       localStorage.removeItem(`2fa_${user.id}`);
       localStorage.removeItem(`2fa_backup_${user.id}`);
+      
+      // Update DynamoDB
+      try {
+        await dynamoUserService.updateUserTwoFactor(user.id, user.email, false);
+        console.log('🔧 2FA disabled in DynamoDB for user:', user.email);
+      } catch (error) {
+        console.error('🔧 Failed to update 2FA in DynamoDB:', error);
+      }
+      
       setTwoFactorEnabled(false);
       toast({
         title: "Two-Factor Authentication Disabled",
@@ -37,9 +47,9 @@ const TwoFactorSettings: React.FC = () => {
     }
   };
 
-  const handleSetupComplete = (secret: string, backupCodes: string[]) => {
+  const handleSetupComplete = async (secret: string, backupCodes: string[]) => {
     if (user) {
-      // Store 2FA data
+      // Store 2FA data in localStorage
       localStorage.setItem(`2fa_${user.id}`, JSON.stringify({
         secret,
         enabled: true,
@@ -48,6 +58,14 @@ const TwoFactorSettings: React.FC = () => {
       
       // Store backup codes
       localStorage.setItem(`2fa_backup_${user.id}`, JSON.stringify(backupCodes));
+      
+      // Update DynamoDB
+      try {
+        await dynamoUserService.updateUserTwoFactor(user.id, user.email, true);
+        console.log('🔧 2FA enabled in DynamoDB for user:', user.email);
+      } catch (error) {
+        console.error('🔧 Failed to update 2FA in DynamoDB:', error);
+      }
       
       setTwoFactorEnabled(true);
       setShowSetup(false);

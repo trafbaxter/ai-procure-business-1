@@ -129,7 +129,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return { success: true, mustChangePassword: true, user: userData };
           }
           
-          if (dbUser.twoFactorEnabled) {
+          // Check 2FA from DynamoDB first, then fallback to localStorage
+          const has2FAEnabled = dbUser.twoFactorEnabled || !!localStorage.getItem(`2fa_${userData.id}`);
+          console.log('🔧 2FA check - DynamoDB:', dbUser.twoFactorEnabled, 'localStorage:', !!localStorage.getItem(`2fa_${userData.id}`), 'final:', has2FAEnabled);
+          
+          if (has2FAEnabled) {
             setPendingTwoFactor(userData);
             return { success: true, requiresTwoFactor: true, user: userData };
           }
