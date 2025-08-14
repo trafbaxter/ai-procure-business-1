@@ -32,7 +32,7 @@ const ApiKeyManager: React.FC = () => {
     try {
       const dynamoKeys = await dynamoApiKeyService.getAllApiKeys();
       const localKeys = dynamoKeys.map(key => ({
-        id: key.ApiKeyID,
+        id: key.KeyID,
         name: key.name,
         key: key.keyHash, // This would be the actual key in a real implementation
         createdAt: key.createdAt,
@@ -82,7 +82,7 @@ const ApiKeyManager: React.FC = () => {
 
     // Create DynamoDB record
     const dynamoKey: DynamoApiKey = {
-      ApiKeyID: apiKeyId,
+      KeyID: apiKeyId,
       UserID: user.id,
       name: newKeyName,
       keyHash: generatedKey, // In production, this should be hashed

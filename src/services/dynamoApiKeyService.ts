@@ -12,7 +12,7 @@ const client = new DynamoDBClient({
 const docClient = DynamoDBDocumentClient.from(client);
 
 export interface ApiKey {
-  ApiKeyID: string;
+  KeyID: string;
   UserID: string;
   name: string;
   keyHash: string;
@@ -24,16 +24,15 @@ export interface ApiKey {
 const TABLE_NAME = import.meta.env.VITE_DYNAMODB_API_KEYS_TABLE || 'Procurement-ApiKeys';
 
 export const dynamoApiKeyService = {
-  async getApiKey(ApiKeyID: string): Promise<ApiKey | null> {
+  async getApiKey(KeyID: string): Promise<ApiKey | null> {
     if (!isDynamoDBEnabled()) return null;
     
     try {
       const result = await docClient.send(new ScanCommand({
         TableName: DYNAMODB_CONFIG.tables.apiKeys,
-        FilterExpression: 'ApiKeyID = :apiKeyId',
+        FilterExpression: 'KeyID = :keyId',
         ExpressionAttributeValues: {
-          ':apiKeyId': ApiKeyID,
-          ':app': 'Procurement'
+          ':keyId': KeyID
         }
       }));
       return result.Items?.[0] as ApiKey || null;
@@ -72,7 +71,7 @@ export const dynamoApiKeyService = {
     }
   },
 
-  async updateApiKey(ApiKeyID: string, updates: Partial<ApiKey>): Promise<boolean> {
+  async updateApiKey(KeyID: string, updates: Partial<ApiKey>): Promise<boolean> {
     if (!isDynamoDBEnabled()) return false;
     
     try {
@@ -88,7 +87,7 @@ export const dynamoApiKeyService = {
 
       await docClient.send(new UpdateCommand({
         TableName: DYNAMODB_CONFIG.tables.apiKeys,
-        Key: { ApiKeyID },
+        Key: { KeyID },
         UpdateExpression: `SET ${updateExpression}`,
         ExpressionAttributeNames: expressionAttributeNames,
         ExpressionAttributeValues: expressionAttributeValues
@@ -100,13 +99,13 @@ export const dynamoApiKeyService = {
     }
   },
 
-  async deleteApiKey(ApiKeyID: string): Promise<boolean> {
+  async deleteApiKey(KeyID: string): Promise<boolean> {
     if (!isDynamoDBEnabled()) return false;
     
     try {
       await docClient.send(new DeleteCommand({
         TableName: DYNAMODB_CONFIG.tables.apiKeys,
-        Key: { ApiKeyID }
+        Key: { KeyID }
       }));
       return true;
     } catch (error) {
