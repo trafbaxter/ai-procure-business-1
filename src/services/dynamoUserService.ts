@@ -75,7 +75,16 @@ export const dynamoUserService = {
       });
 
       const result = await docClient.send(command);
-      return result.Items?.[0] as User || null;
+      const user = result.Items?.[0] as User || null;
+      
+      // Add debugging for user data
+      if (user) {
+        console.log('🔧 Raw DynamoDB user data:', JSON.stringify(user, null, 2));
+        console.log('🔧 User Name field:', user.Name);
+        console.log('🔧 User Email field:', user.Email);
+      }
+      
+      return user;
     } catch (error) {
       console.error('DynamoDB getUserByEmail error:', error);
       return null;
@@ -113,12 +122,14 @@ export const dynamoUserService = {
           UserID: user.UserID,
           Email: user.Email,
         },
-        UpdateExpression: 'SET #password = :password, IsActive = :isActive, IsAdmin = :isAdmin, mustChangePassword = :mustChange',
+        UpdateExpression: 'SET #password = :password, #name = :name, IsActive = :isActive, IsAdmin = :isAdmin, mustChangePassword = :mustChange',
         ExpressionAttributeNames: {
           '#password': 'Password',
+          '#name': 'Name',
         },
         ExpressionAttributeValues: {
           ':password': user.Password,
+          ':name': user.Name || user.Email || 'Unknown User',
           ':isActive': user.IsActive,
           ':isAdmin': user.IsAdmin,
           ':mustChange': user.mustChangePassword || false,
