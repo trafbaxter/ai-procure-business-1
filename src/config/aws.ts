@@ -3,7 +3,7 @@ export const AWS_CONFIG = {
   region: import.meta.env.VITE_AWS_REGION || 'us-east-1',
   accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID || '',
   secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY || '',
-  sesFromEmail: import.meta.env.VITE_SES_FROM_EMAIL, //|| 'noreply@yourcompany.com',
+  sesFromEmail: import.meta.env.VITE_SES_FROM_EMAIL || 'noreply@yourcompany.com',
   sesFromName: import.meta.env.VITE_SES_FROM_NAME || 'Procurement System'
 };
 
