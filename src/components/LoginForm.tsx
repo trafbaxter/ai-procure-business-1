@@ -124,16 +124,7 @@ const LoginForm = () => {
         const errorMessage = result.message || 'Invalid email or password. Please try again.';
         console.log('🔧 Setting error message:', errorMessage);
         setError(errorMessage);
-        
-        // Add a small delay to ensure the error state is properly set
-        setTimeout(() => {
-          console.log('🔧 Error state after timeout:', error);
-          // Force a re-render by setting the error again if it's empty
-          if (!error) {
-            console.log('🔧 Force setting error again');
-            setError(errorMessage);
-          }
-        }, 100);
+        console.log('🔧 Error message set, should display now');
       }
       // If requiresTwoFactor is true, the pendingTwoFactor state will be set
       // and the component will re-render to show the 2FA form
