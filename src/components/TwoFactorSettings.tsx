@@ -14,12 +14,41 @@ const TwoFactorSettings: React.FC = () => {
   const [showSetup, setShowSetup] = useState(false);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
 
-  // Check if user has 2FA enabled (from localStorage or user data)
+  // Check if user has 2FA enabled (from both localStorage and DynamoDB)
   React.useEffect(() => {
-    if (user) {
-      const twoFactorData = localStorage.getItem(`2fa_${user.id}`);
-      setTwoFactorEnabled(!!twoFactorData);
-    }
+    const check2FAStatus = async () => {
+      if (user) {
+        // Check localStorage first
+        const localTwoFactorData = localStorage.getItem(`2fa_${user.id}`);
+        const localEnabled = !!localTwoFactorData;
+        
+        // Check DynamoDB
+        let dbEnabled = false;
+        try {
+          const dbUser = await dynamoUserService.getUserByEmail(user.email);
+          dbEnabled = !!dbUser?.twoFactorEnabled;
+          console.log('🔧 2FA Status Check - Local:', localEnabled, 'DB:', dbEnabled);
+        } catch (error) {
+          console.error('🔧 Failed to check 2FA status in DynamoDB:', error);
+        }
+        
+        // 2FA is enabled if either localStorage OR DynamoDB says it's enabled
+        const isEnabled = localEnabled || dbEnabled;
+        setTwoFactorEnabled(isEnabled);
+        
+        // Sync the states if they're different
+        if (localEnabled !== dbEnabled) {
+          console.log('🔧 2FA status mismatch - syncing...');
+          try {
+            await dynamoUserService.updateUserTwoFactor(user.id, user.email, isEnabled);
+          } catch (error) {
+            console.error('🔧 Failed to sync 2FA status:', error);
+          }
+        }
+      }
+    };
+    
+    check2FAStatus();
   }, [user]);
 
   const handleEnable2FA = () => {
