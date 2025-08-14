@@ -12,9 +12,10 @@ export interface ApiKey {
   keyHash: string;
   createdAt: string;
   expiresAt?: string;
-const TABLE_NAME = import.meta.env.VITE_DYNAMODB_API_KEYS_TABLE || 'Procurement-ApiKeys';
   permissions: string[];
 }
+
+const TABLE_NAME = import.meta.env.VITE_DYNAMODB_API_KEYS_TABLE || 'Procurement-ApiKeys';
 
 export const dynamoApiKeyService = {
   async getApiKey(ApiKeyID: string): Promise<ApiKey | null> {
