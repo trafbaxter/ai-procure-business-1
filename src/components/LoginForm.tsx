@@ -117,13 +117,17 @@ const LoginForm = () => {
     
     try {
       const result = await login(email, password);
+      console.log('🔧 Login result:', result);
       if (!result.success) {
         // Use specific message if provided, otherwise use generic message
-        setError(result.message || 'Invalid email or password. Please try again.');
+        const errorMessage = result.message || 'Invalid email or password. Please try again.';
+        console.log('🔧 Setting error message:', errorMessage);
+        setError(errorMessage);
       }
       // If requiresTwoFactor is true, the pendingTwoFactor state will be set
       // and the component will re-render to show the 2FA form
     } catch (err) {
+      console.error('🔧 Login error:', err);
       setError('An error occurred during login. Please try again.');
     }
   };

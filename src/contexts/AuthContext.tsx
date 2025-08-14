@@ -100,6 +100,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const dbUser = await dynamoUserService.getUserByEmail(email);
       
       if (dbUser) {
+        console.log('🔧 User found in DB:', { status: dbUser.status, approved: dbUser.approved });
+        
         // Check if user is approved
         if (dbUser.status === 'pending' || (dbUser.approved === false && dbUser.status !== 'approved')) {
           console.log('🔧 User account pending approval');
