@@ -152,13 +152,27 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUsers(prev => [...prev, newUser]);
     toast({ title: 'User created successfully (localStorage)' });
   };
-  const removeUser = (userId: string) => {
+  const removeUser = async (userId: string) => {
     if (userId === currentUser.UserID) {
       toast({ title: 'Cannot delete current user', variant: 'destructive' });
       return;
     }
-    setUsers(prev => prev.filter(user => user.UserID !== userId));
-    toast({ title: 'User removed successfully' });
+
+    try {
+      // Find the user to get their email for DynamoDB deletion
+      const user = users.find(u => u.UserID === userId);
+      if (user) {
+        // Mark user as deleted in DynamoDB
+        await dynamoUserService.deleteUser(userId, user.Email);
+      }
+      
+      // Remove from local state
+      setUsers(prev => prev.filter(user => user.UserID !== userId));
+      toast({ title: 'User deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast({ title: 'Failed to delete user', variant: 'destructive' });
+    }
   };
 
   const updateUserRole = (userId: string, role: 'admin' | 'user') => {
