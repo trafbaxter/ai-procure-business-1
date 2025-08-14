@@ -18,6 +18,11 @@ const UserDropdown: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
+  // Debug logging
+  console.log('🔧 UserDropdown - user object:', user);
+  console.log('🔧 UserDropdown - user.Name:', user?.Name);
+  console.log('🔧 UserDropdown - user.Email:', user?.Email);
+
   const handleProfile = () => {
     console.log('Opening user profile...');
   };
