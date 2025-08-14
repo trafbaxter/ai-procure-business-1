@@ -123,6 +123,11 @@ const LoginForm = () => {
         const errorMessage = result.message || 'Invalid email or password. Please try again.';
         console.log('🔧 Setting error message:', errorMessage);
         setError(errorMessage);
+        console.log('🔧 Error state after setting:', errorMessage);
+        // Force a re-render to ensure the error is displayed
+        setTimeout(() => {
+          console.log('🔧 Error state in timeout:', errorMessage);
+        }, 100);
       }
       // If requiresTwoFactor is true, the pendingTwoFactor state will be set
       // and the component will re-render to show the 2FA form
@@ -155,11 +160,15 @@ const LoginForm = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
+            <>
+              {console.log('🔧 Rendering error alert with message:', error)}
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            </>
           )}
+          {console.log('🔧 Current error state:', error)}
           
           <form onSubmit={handleEmailLogin} className="space-y-4">
             <div className="space-y-2">
@@ -209,5 +218,6 @@ const LoginForm = () => {
     </div>
   );
 };
+
 
 export default LoginForm;
