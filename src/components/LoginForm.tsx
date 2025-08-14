@@ -22,9 +22,10 @@ const LoginForm = () => {
   // Use effect to ensure error persists through re-renders
   useEffect(() => {
     if (errorRef.current && !error) {
+      console.log('🔧 Restoring error from ref:', errorRef.current);
       setError(errorRef.current);
     }
-  }, [isLoading, error]);
+  }, [isLoading]); // Remove error from dependencies to avoid loops
 
   // If there's a pending password change, show the change password form
   if (pendingPasswordChange) {
@@ -121,7 +122,9 @@ const LoginForm = () => {
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('🔧 Starting login, clearing error state');
     setError('');
+    errorRef.current = ''; // Clear ref as well
     
     try {
       const result = await login(email, password);
@@ -132,14 +135,20 @@ const LoginForm = () => {
         console.log('🔧 Setting error message:', errorMessage);
         errorRef.current = errorMessage; // Store in ref to persist through re-renders
         setError(errorMessage);
-        console.log('🔧 Error state after setting:', errorMessage);
-        // Force a re-render to ensure the error is displayed
+        console.log('🔧 Error state after setting:', error);
+        
+        // Force error to show with a small delay to ensure state is updated
         setTimeout(() => {
-          console.log('🔧 Error state in timeout:', errorMessage);
-          if (!error) { // Only set if current error is empty
-            setError(errorMessage);
+          console.log('🔧 Timeout check - errorRef:', errorRef.current, 'error state:', error);
+          if (errorRef.current && !error) {
+            console.log('🔧 Forcing error display');
+            setError(errorRef.current);
           }
-        }, 100);
+        }, 50);
+      } else {
+        // Clear error on successful login
+        errorRef.current = '';
+        setError('');
       }
       // If requiresTwoFactor is true, the pendingTwoFactor state will be set
       // and the component will re-render to show the 2FA form
