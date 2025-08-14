@@ -2,7 +2,13 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand, PutCommand, DeleteCommand, UpdateCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { DYNAMODB_CONFIG, isDynamoDBEnabled } from '@/config/dynamodb';
 
-const client = new DynamoDBClient({ region: DYNAMODB_CONFIG.region });
+const client = new DynamoDBClient({ 
+  region: DYNAMODB_CONFIG.region,
+  credentials: {
+    accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID || '',
+    secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY || ''
+  }
+});
 const docClient = DynamoDBDocumentClient.from(client);
 
 export interface ApiKey {
