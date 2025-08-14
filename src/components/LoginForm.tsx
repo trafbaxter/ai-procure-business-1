@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,7 +16,15 @@ const LoginForm = () => {
   const [error, setError] = useState('');
   const [useBackupCode, setUseBackupCode] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
+  const errorRef = useRef<string>('');
   const { login, verifyTwoFactor, isLoading, pendingPasswordChange, pendingTwoFactor } = useAuth();
+
+  // Use effect to ensure error persists through re-renders
+  useEffect(() => {
+    if (errorRef.current && !error) {
+      setError(errorRef.current);
+    }
+  }, [isLoading, error]);
 
   // If there's a pending password change, show the change password form
   if (pendingPasswordChange) {
@@ -122,18 +130,24 @@ const LoginForm = () => {
         // Use specific message if provided, otherwise use generic message
         const errorMessage = result.message || 'Invalid email or password. Please try again.';
         console.log('🔧 Setting error message:', errorMessage);
+        errorRef.current = errorMessage; // Store in ref to persist through re-renders
         setError(errorMessage);
         console.log('🔧 Error state after setting:', errorMessage);
         // Force a re-render to ensure the error is displayed
         setTimeout(() => {
           console.log('🔧 Error state in timeout:', errorMessage);
+          if (!error) { // Only set if current error is empty
+            setError(errorMessage);
+          }
         }, 100);
       }
       // If requiresTwoFactor is true, the pendingTwoFactor state will be set
       // and the component will re-render to show the 2FA form
     } catch (err) {
       console.error('🔧 Login error:', err);
-      setError('An error occurred during login. Please try again.');
+      const errorMessage = 'An error occurred during login. Please try again.';
+      errorRef.current = errorMessage;
+      setError(errorMessage);
     }
   };
   
