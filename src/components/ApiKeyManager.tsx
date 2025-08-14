@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Copy, Eye, EyeOff, Plus, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { dynamoApiKeyService, ApiKey as DynamoApiKey } from '@/services/dynamoApiKeyService';
 
 interface ApiKey {
   id: string;
@@ -15,19 +17,37 @@ interface ApiKey {
   lastUsed?: string;
   isActive: boolean;
 }
-
 const ApiKeyManager: React.FC = () => {
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [newKeyName, setNewKeyName] = useState('');
   const [showKeys, setShowKeys] = useState<{[key: string]: boolean}>({});
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
-    const stored = localStorage.getItem('apiKeys');
-    if (stored) {
-      setApiKeys(JSON.parse(stored));
-    }
+    loadApiKeys();
   }, []);
+
+  const loadApiKeys = async () => {
+    try {
+      const dynamoKeys = await dynamoApiKeyService.getAllApiKeys();
+      const localKeys = dynamoKeys.map(key => ({
+        id: key.ApiKeyID,
+        name: key.name,
+        key: key.keyHash, // This would be the actual key in a real implementation
+        createdAt: key.createdAt,
+        isActive: true
+      }));
+      setApiKeys(localKeys);
+    } catch (error) {
+      console.error('Error loading API keys:', error);
+      // Fallback to localStorage
+      const stored = localStorage.getItem('apiKeys');
+      if (stored) {
+        setApiKeys(JSON.parse(stored));
+      }
+    }
+  };
 
   const generateApiKey = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -38,32 +58,70 @@ const ApiKeyManager: React.FC = () => {
     return result;
   };
 
-  const createApiKey = () => {
+  const createApiKey = async () => {
     if (!newKeyName.trim()) {
       toast({ title: 'Error', description: 'Please enter a name for the API key' });
       return;
     }
 
+    if (!user) {
+      toast({ title: 'Error', description: 'User not authenticated' });
+      return;
+    }
+
+    const apiKeyId = Date.now().toString();
+    const generatedKey = generateApiKey();
+    
     const newKey: ApiKey = {
-      id: Date.now().toString(),
+      id: apiKeyId,
       name: newKeyName,
-      key: generateApiKey(),
+      key: generatedKey,
       createdAt: new Date().toISOString(),
       isActive: true
     };
 
-    const updated = [...apiKeys, newKey];
-    setApiKeys(updated);
-    localStorage.setItem('apiKeys', JSON.stringify(updated));
-    setNewKeyName('');
-    toast({ title: 'Success', description: 'API key created successfully' });
+    // Create DynamoDB record
+    const dynamoKey: DynamoApiKey = {
+      ApiKeyID: apiKeyId,
+      UserID: user.id,
+      name: newKeyName,
+      keyHash: generatedKey, // In production, this should be hashed
+      createdAt: new Date().toISOString(),
+      permissions: ['read', 'write']
+    };
+
+    try {
+      const success = await dynamoApiKeyService.createApiKey(dynamoKey);
+      if (success) {
+        const updated = [...apiKeys, newKey];
+        setApiKeys(updated);
+        localStorage.setItem('apiKeys', JSON.stringify(updated));
+        setNewKeyName('');
+        toast({ title: 'Success', description: 'API key created successfully' });
+      } else {
+        toast({ title: 'Error', description: 'Failed to create API key in database' });
+      }
+    } catch (error) {
+      console.error('Error creating API key:', error);
+      toast({ title: 'Error', description: 'Failed to create API key' });
+    }
   };
 
-  const deleteApiKey = (id: string) => {
-    const updated = apiKeys.filter(key => key.id !== id);
-    setApiKeys(updated);
-    localStorage.setItem('apiKeys', JSON.stringify(updated));
-    toast({ title: 'Success', description: 'API key deleted' });
+  const deleteApiKey = async (id: string) => {
+    try {
+      const success = await dynamoApiKeyService.deleteApiKey(id);
+      if (success) {
+        const updated = apiKeys.filter(key => key.id !== id);
+        setApiKeys(updated);
+        localStorage.setItem('apiKeys', JSON.stringify(updated));
+        toast({ title: 'Success', description: 'API key deleted' });
+      } else {
+        toast({ title: 'Error', description: 'Failed to delete API key from database' });
+      }
+    } catch (error) {
+      console.error('Error deleting API key:', error);
+      toast({ title: 'Error', description: 'Failed to delete API key' });
+    }
   };
 
   const copyToClipboard = (text: string) => {
