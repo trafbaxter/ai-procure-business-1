@@ -34,6 +34,8 @@ interface AuthContextType {
   pendingPasswordChange: User | null;
   pendingTwoFactor: User | null;
   completePendingLogin: () => void;
+  loginError: string; // Add login error state
+  clearLoginError: () => void; // Add method to clear error
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -51,6 +53,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [pendingPasswordChange, setPendingPasswordChange] = useState<User | null>(null);
   const [pendingTwoFactor, setPendingTwoFactor] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loginError, setLoginError] = useState(''); // Add login error state
+
+  const clearLoginError = () => setLoginError(''); // Add clear error method
 
   useEffect(() => {
     const initAuth = async () => {
@@ -92,6 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string): Promise<LoginResult> => {
     setIsLoading(true);
+    clearLoginError(); // Clear any previous error
     console.log('🔧 Login attempt for:', email);
     
     try {
@@ -105,19 +111,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Check if user is approved
         if (dbUser.status === 'pending' || (dbUser.approved === false && dbUser.status !== 'approved')) {
           console.log('🔧 User account pending approval');
+          const errorMessage = 'Your account is pending approval. Please wait for an administrator to approve your registration.';
+          setLoginError(errorMessage); // Set error in context
           return { 
             success: false, 
-            message: 'Your account is pending approval. Please wait for an administrator to approve your registration.' 
+            message: errorMessage 
           };
         }
         
         if (dbUser.status === 'rejected') {
           console.log('🔧 User account has been rejected');
+          const errorMessage = 'Your account registration has been rejected. Please contact an administrator for more information.';
+          setLoginError(errorMessage); // Set error in context
           return { 
             success: false, 
-            message: 'Your account registration has been rejected. Please contact an administrator for more information.' 
+            message: errorMessage 
           };
         }
+        
+
         
         console.log('🔧 DynamoDB user password verification...');
         console.log('🔧 Input password:', password);
@@ -352,7 +364,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isLoading,
       pendingPasswordChange,
       pendingTwoFactor,
-      completePendingLogin
+      completePendingLogin,
+      loginError, // Add login error to context value
+      clearLoginError // Add clear error method to context value
     }}>
       {children}
     </AuthContext.Provider>

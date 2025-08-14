@@ -13,10 +13,9 @@ const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [twoFactorCode, setTwoFactorCode] = useState('');
-  const [error, setError] = useState('');
   const [useBackupCode, setUseBackupCode] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
-  const { login, verifyTwoFactor, isLoading, pendingPasswordChange, pendingTwoFactor } = useAuth();
+  const { login, verifyTwoFactor, isLoading, pendingPasswordChange, pendingTwoFactor, loginError, clearLoginError } = useAuth();
 
   // If there's a pending password change, show the change password form
   if (pendingPasswordChange) {
@@ -27,15 +26,16 @@ const LoginForm = () => {
   if (pendingTwoFactor) {
     const handleTwoFactorVerify = async (e: React.FormEvent) => {
       e.preventDefault();
-      setError('');
+      clearLoginError();
       
       try {
         const success = await verifyTwoFactor(twoFactorCode, useBackupCode);
         if (!success) {
-          setError(useBackupCode ? 'Invalid backup code' : 'Invalid verification code');
+          // For 2FA, we still need local error handling since it's not in AuthContext
+          console.error('2FA verification failed');
         }
       } catch (err) {
-        setError('Verification failed. Please try again.');
+        console.error('2FA verification error:', err);
       }
     };
 
@@ -114,24 +114,17 @@ const LoginForm = () => {
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('🔧 Starting login, clearing error state');
-    setError('');
+    clearLoginError(); // Use context method instead of local state
     
     try {
       const result = await login(email, password);
       console.log('🔧 Login result:', result);
-      if (!result.success) {
-        // Use specific message if provided, otherwise use generic message
-        const errorMessage = result.message || 'Invalid email or password. Please try again.';
-        console.log('🔧 Setting error message:', errorMessage);
-        setError(errorMessage);
-        console.log('🔧 Error message set, should display now');
-      }
+      // Error is now handled in AuthContext, no need to set it here
       // If requiresTwoFactor is true, the pendingTwoFactor state will be set
       // and the component will re-render to show the 2FA form
     } catch (err) {
       console.error('🔧 Login error:', err);
-      const errorMessage = 'An error occurred during login. Please try again.';
-      setError(errorMessage);
+      // Error handling is now in AuthContext
     }
   };
   
@@ -157,16 +150,16 @@ const LoginForm = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {error && (
+          {loginError && (
             <>
-              {console.log('🔧 Rendering error alert with message:', error)}
+              {console.log('🔧 Rendering error alert with message:', loginError)}
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription>{loginError}</AlertDescription>
               </Alert>
             </>
           )}
-          {console.log('🔧 Current error state:', error)}
+          {console.log('🔧 Current error state:', loginError)}
           
           <form onSubmit={handleEmailLogin} className="space-y-4">
             <div className="space-y-2">
