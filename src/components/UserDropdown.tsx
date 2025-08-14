@@ -1,5 +1,5 @@
-import React from 'react';
-import { Button } from '@/components/ui/button';
+import { LogOut, Settings, UserCircle, Shield, Users } from "lucide-react";
+import { Button } from "./ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,28 +7,33 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useAuth } from '@/contexts/AuthContext';
-import { User, Settings, LogOut, UserCircle, Users, Shield } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+} from "./ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Badge } from "./ui/badge";
+import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
-const UserDropdown: React.FC = () => {
+export function UserDropdown() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  // Debug logging
   console.log('🔧 UserDropdown - user object:', user);
-  console.log('🔧 UserDropdown - user.Name:', user?.Name);
-  console.log('🔧 UserDropdown - user.Email:', user?.Email);
+  console.log('🔧 UserDropdown - user.name:', user?.name);
+  console.log('🔧 UserDropdown - user.email:', user?.email);
+
+  if (!user) return null;
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   const handleProfile = () => {
-    console.log('Opening user profile...');
+    navigate('/profile');
   };
 
   const handleSettings = () => {
-    console.log('Opening settings...');
+    navigate('/settings');
   };
 
   const handleSecurity = () => {
@@ -39,20 +44,18 @@ const UserDropdown: React.FC = () => {
     navigate('/users');
   };
 
-  const handleLogout = () => {
-    logout();
-  };
-
-  if (!user) return null;
+  // Use lowercase property names (user.name, user.email)
+  const displayName = user.name || user.email || 'User';
+  const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase();
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={user.avatar} alt={user.Name || user.Email} />
+            <AvatarImage src={user.avatar} alt={displayName} />
             <AvatarFallback className="bg-white/10 text-white">
-              {(user.Name || user.Email || 'U').charAt(0).toUpperCase()}
+              {initials}
             </AvatarFallback>
           </Avatar>
         </Button>
@@ -60,11 +63,11 @@ const UserDropdown: React.FC = () => {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel className="flex items-center justify-between">
           <div>
-            <div className="font-medium">{user.Name || user.Email}</div>
-            <div className="text-xs text-muted-foreground">{user.Email}</div>
+            <div className="font-medium">{displayName}</div>
+            <div className="text-xs text-muted-foreground">{user.email}</div>
           </div>
-          <Badge variant={user.IsAdmin ? 'default' : 'secondary'}>
-            {user.IsAdmin ? 'admin' : 'user'}
+          <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+            {user.role}
           </Badge>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
@@ -80,7 +83,7 @@ const UserDropdown: React.FC = () => {
           <Shield className="mr-2 h-4 w-4" />
           Security
         </DropdownMenuItem>
-        {user.IsAdmin && (
+        {user.role === 'admin' && (
           <DropdownMenuItem onClick={handleUserManagement}>
             <Users className="mr-2 h-4 w-4" />
             User Management
@@ -94,6 +97,6 @@ const UserDropdown: React.FC = () => {
       </DropdownMenuContent>
     </DropdownMenu>
   );
-};
+}
 
 export default UserDropdown;
