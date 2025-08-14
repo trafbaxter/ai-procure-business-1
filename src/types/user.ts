@@ -13,6 +13,8 @@ export interface User {
   twoFactorEnabled?: boolean;
   twoFactorSecret?: string;
   backupCodes?: string[];
+  approved?: boolean; // New field for admin approval
+  status?: 'pending' | 'approved' | 'rejected'; // Alternative status field
 }
 
 export interface CreateUserData {

@@ -36,6 +36,8 @@ export const dynamoUserService = {
           Deleted: user.Deleted || false,
           mustChangePassword: user.mustChangePassword || false,
           twoFactorEnabled: user.twoFactorEnabled || false,
+          approved: user.approved || false,
+          status: user.status || 'pending',
         },
       });
 
@@ -183,6 +185,79 @@ export const dynamoUserService = {
     } catch (error) {
       console.error('DynamoDB deleteUser error:', error);
       return false;
+    }
+  },
+
+  async approveUser(userId: string, email: string): Promise<boolean> {
+    try {
+      const command = new UpdateCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          UserID: userId,
+          Email: email,
+        },
+        UpdateExpression: 'SET approved = :approved, #status = :status',
+        ExpressionAttributeNames: {
+          '#status': 'status',
+        },
+        ExpressionAttributeValues: {
+          ':approved': true,
+          ':status': 'approved',
+        },
+      });
+
+      await docClient.send(command);
+      return true;
+    } catch (error) {
+      console.error('DynamoDB approveUser error:', error);
+      return false;
+    }
+  },
+
+  async rejectUser(userId: string, email: string): Promise<boolean> {
+    try {
+      const command = new UpdateCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          UserID: userId,
+          Email: email,
+        },
+        UpdateExpression: 'SET approved = :approved, #status = :status',
+        ExpressionAttributeNames: {
+          '#status': 'status',
+        },
+        ExpressionAttributeValues: {
+          ':approved': false,
+          ':status': 'rejected',
+        },
+      });
+
+      await docClient.send(command);
+      return true;
+    } catch (error) {
+      console.error('DynamoDB rejectUser error:', error);
+      return false;
+    }
+  },
+
+  async getPendingUsers(): Promise<User[]> {
+    try {
+      const command = new ScanCommand({
+        TableName: TABLE_NAME,
+        FilterExpression: '#status = :status AND (attribute_not_exists(Deleted) OR Deleted = :deleted)',
+        ExpressionAttributeNames: {
+          '#status': 'status',
+        },
+        ExpressionAttributeValues: {
+          ':status': 'pending',
+          ':deleted': false,
+        },
+      });
+      const result = await docClient.send(command);
+      return result.Items as User[] || [];
+    } catch (error) {
+      console.error('DynamoDB getPendingUsers error:', error);
+      return [];
     }
   },
 };

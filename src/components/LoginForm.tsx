@@ -5,16 +5,17 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, AlertCircle, Shield } from 'lucide-react';
+import { Loader2, AlertCircle, Shield, UserPlus } from 'lucide-react';
 import ForgotPasswordDialog from './ForgotPasswordDialog';
 import ChangePasswordForm from './ChangePasswordForm';
-
+import { RegisterForm } from './RegisterForm';
 const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const [error, setError] = useState('');
   const [useBackupCode, setUseBackupCode] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
   const { login, verifyTwoFactor, isLoading, pendingPasswordChange, pendingTwoFactor } = useAuth();
 
   // If there's a pending password change, show the change password form
@@ -125,6 +126,18 @@ const LoginForm = () => {
       setError('An error occurred during login. Please try again.');
     }
   };
+  
+  // Show registration form if requested
+  if (showRegister) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <RegisterForm 
+          onSuccess={() => setShowRegister(false)}
+          onBackToLogin={() => setShowRegister(false)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
@@ -175,6 +188,17 @@ const LoginForm = () => {
               Sign in
             </Button>
           </form>
+          
+          <div className="text-center">
+            <Button
+              variant="link"
+              onClick={() => setShowRegister(true)}
+              className="text-sm"
+            >
+              <UserPlus className="mr-2 h-4 w-4" />
+              Don't have an account? Register here
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

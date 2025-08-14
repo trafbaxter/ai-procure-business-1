@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { CreateUserDialog } from '@/components/CreateUserDialog';
 import { UserTable } from '@/components/UserTable';
+import { PendingUsersPanel } from '@/components/PendingUsersPanel';
 import { useUserContext } from '@/contexts/UserContext';
 import { Users, Shield, User, ArrowLeft, Database } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -118,6 +119,7 @@ export const UserManagement: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+      <PendingUsersPanel />
 
       <Card>
         <CardHeader>

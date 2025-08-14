@@ -97,9 +97,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Try DynamoDB first
       console.log('🔧 Checking DynamoDB for user...');
       const dbUser = await dynamoUserService.getUserByEmail(email);
-      console.log('🔧 DynamoDB user found:', !!dbUser);
       
       if (dbUser) {
+        // Check if user is approved
+        if (dbUser.status === 'pending' || (dbUser.approved === false && dbUser.status !== 'approved')) {
+          console.log('🔧 User account pending approval');
+          return { success: false };
+        }
+        
+        if (dbUser.status === 'rejected') {
+          console.log('🔧 User account has been rejected');
+          return { success: false };
+        }
+        
         console.log('🔧 DynamoDB user password verification...');
         console.log('🔧 Input password:', password);
         console.log('🔧 Stored hash:', dbUser.Password);
@@ -109,7 +119,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('🔧 DynamoDB password match:', passwordMatch);
         
         if (passwordMatch) {
-          console.log('🔧 DynamoDB login successful');
           console.log('🔧 User data from DB:', {
             UserID: dbUser.UserID,
             Name: dbUser.Name,
