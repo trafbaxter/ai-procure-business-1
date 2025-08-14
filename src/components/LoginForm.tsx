@@ -55,10 +55,10 @@ const LoginForm = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {error && (
+            {loginError && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription>{loginError}</AlertDescription>
               </Alert>
             )}
 
@@ -96,7 +96,7 @@ const LoginForm = () => {
               onClick={() => {
                 setUseBackupCode(!useBackupCode);
                 setTwoFactorCode('');
-                setError('');
+                clearLoginError();
               }}
               className="w-full text-sm"
             >
