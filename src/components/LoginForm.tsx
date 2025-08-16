@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,13 +9,30 @@ import { Loader2, AlertCircle, Shield, UserPlus } from 'lucide-react';
 import ForgotPasswordDialog from './ForgotPasswordDialog';
 import ChangePasswordForm from './ChangePasswordForm';
 import { RegisterForm } from './RegisterForm';
+import { AwsCredentialsAlert } from './AwsCredentialsAlert';
 const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const [useBackupCode, setUseBackupCode] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
+  const [showAwsAlert, setShowAwsAlert] = useState(false);
   const { login, verifyTwoFactor, isLoading, pendingPasswordChange, pendingTwoFactor, loginError, clearLoginError } = useAuth();
+
+  // Check for AWS credential issues and show alert
+  useEffect(() => {
+    const checkAwsCredentials = () => {
+      const hasCredentials = !!(import.meta.env.VITE_AWS_ACCESS_KEY_ID && import.meta.env.VITE_AWS_SECRET_ACCESS_KEY);
+      const accessKey = import.meta.env.VITE_AWS_ACCESS_KEY_ID;
+      const secretKey = import.meta.env.VITE_AWS_SECRET_ACCESS_KEY;
+      
+      if (hasCredentials && (!accessKey.startsWith('AKIA') || accessKey.length < 16 || secretKey.length < 32)) {
+        setShowAwsAlert(true);
+      }
+    };
+    
+    checkAwsCredentials();
+  }, []);
 
   // If there's a pending password change, show the change password form
   if (pendingPasswordChange) {
@@ -150,6 +167,8 @@ const LoginForm = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <AwsCredentialsAlert show={showAwsAlert} />
+          
           {loginError && (
             <>
               {console.log('🔧 Rendering error alert with message:', loginError)}
@@ -160,7 +179,6 @@ const LoginForm = () => {
             </>
           )}
           {console.log('🔧 Current error state:', loginError)}
-          
           <form onSubmit={handleEmailLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>

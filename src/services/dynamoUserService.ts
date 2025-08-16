@@ -102,6 +102,15 @@ export const dynamoUserService = {
       return user;
     } catch (error) {
       console.error('DynamoDB getUserByEmail error:', error);
+      // If we get an InvalidSignatureException or similar AWS auth error, return null to fallback to localStorage
+      if (error instanceof Error && (
+        error.message.includes('InvalidSignatureException') ||
+        error.message.includes('UnrecognizedClientException') ||
+        error.message.includes('signature')
+      )) {
+        console.warn('⚠️ AWS credentials appear to be invalid. Please update your AWS Access Key and Secret Key in your .env file.');
+        console.warn('⚠️ Falling back to localStorage authentication.');
+      }
       return null;
     }
   },
@@ -140,6 +149,15 @@ export const dynamoUserService = {
       return result.Items as User[] || [];
     } catch (error) {
       console.error('DynamoDB getAllUsers error:', error);
+      // If we get an InvalidSignatureException or similar AWS auth error, return empty array to fallback to localStorage
+      if (error instanceof Error && (
+        error.message.includes('InvalidSignatureException') ||
+        error.message.includes('UnrecognizedClientException') ||
+        error.message.includes('signature')
+      )) {
+        console.warn('⚠️ AWS credentials appear to be invalid. Please update your AWS Access Key and Secret Key in your .env file.');
+        console.warn('⚠️ Falling back to localStorage authentication.');
+      }
       return [];
     }
   },
