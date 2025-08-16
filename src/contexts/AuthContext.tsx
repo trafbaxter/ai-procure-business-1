@@ -62,7 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const session = validateSession();
       if (session) {
         try {
-          // Try to get user from DynamoDB first
+          // Try to get user from DynamoDB first, but don't block on failure
           const dbUser = await dynamoUserService.getUserById(session.userId);
           if (dbUser) {
             const userData = {
@@ -75,18 +75,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUser(userData);
             refreshSession();
           } else {
-            // Comment out default admin user fallback
-            // if (session.userId === '1') {
-            //   const userData = { id: '1', name: 'Admin User', email: 'admin@company.com', role: 'admin' as const };
-            //   setUser(userData);
-            //   refreshSession();
-            // } else {
+            // Fallback to localStorage for existing sessions
+            const storedUsers = JSON.parse(localStorage.getItem('app_users') || '[]');
+            const foundUser = storedUsers.find((u: any) => u.id === session.userId);
+            if (foundUser) {
+              setUser(foundUser);
+              refreshSession();
+            } else {
               clearSession();
-            // }
+            }
           }
         } catch (error) {
           console.error('Auth initialization error:', error);
-          clearSession();
+          // Try localStorage fallback before clearing session
+          try {
+            const storedUsers = JSON.parse(localStorage.getItem('app_users') || '[]');
+            const foundUser = storedUsers.find((u: any) => u.id === session.userId);
+            if (foundUser) {
+              setUser(foundUser);
+              refreshSession();
+            } else {
+              clearSession();
+            }
+          } catch (localError) {
+            console.error('localStorage fallback error:', localError);
+            clearSession();
+          }
         }
       }
       setIsLoading(false);

@@ -50,6 +50,21 @@ export const dynamoUserService = {
   },
 
   async getUserById(userId: string): Promise<User | null> {
+    // Check credentials before making DynamoDB call
+    const hasCredentials = !!(import.meta.env.VITE_AWS_ACCESS_KEY_ID && import.meta.env.VITE_AWS_SECRET_ACCESS_KEY);
+    if (!hasCredentials) {
+      console.warn('⚠️ AWS credentials not configured, skipping DynamoDB getUserById call');
+      return null;
+    }
+
+    const accessKey = import.meta.env.VITE_AWS_ACCESS_KEY_ID;
+    const secretKey = import.meta.env.VITE_AWS_SECRET_ACCESS_KEY;
+    
+    if (!accessKey.startsWith('AKIA') || accessKey.length < 16 || secretKey.length < 32) {
+      console.warn('⚠️ Invalid AWS credentials format, skipping DynamoDB getUserById call');
+      return null;
+    }
+
     try {
       const command = new ScanCommand({
         TableName: TABLE_NAME,
@@ -62,6 +77,15 @@ export const dynamoUserService = {
       return result.Items?.[0] as User || null;
     } catch (error) {
       console.error('DynamoDB getUserById error:', error);
+      // If we get an InvalidSignatureException or similar AWS auth error, return null to fallback to localStorage
+      if (error instanceof Error && (
+        error.message.includes('InvalidSignatureException') ||
+        error.message.includes('UnrecognizedClientException') ||
+        error.message.includes('signature')
+      )) {
+        console.warn('⚠️ AWS credentials appear to be invalid. Please update your AWS Access Key and Secret Key in your .env file.');
+        console.warn('⚠️ Falling back to localStorage authentication.');
+      }
       return null;
     }
   },

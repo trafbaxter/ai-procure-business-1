@@ -47,9 +47,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const loadUsers = async () => {
       try {
-        // Try to load from DynamoDB first
+        // Try to load from DynamoDB first, but don't block on failure
         const dbUsers = await dynamoUserService.getAllUsers();
-        if (dbUsers.length > 0) {
+        if (dbUsers && dbUsers.length > 0) {
           // Convert DynamoDB users to proper format with Date objects
           const formattedUsers = dbUsers.map((user: any) => ({
             ...user,
@@ -60,15 +60,27 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             status: user.IsActive ? 'active' : 'inactive',
             createdAt: new Date(user.DateCreated)
           }));
-          //setUsers([currentUser, ...formattedUsers.filter((u: any) => u.UserID !== currentUser.UserID)]);
           setUsers([currentUser, ...formattedUsers.filter((u: any) => u.UserID !== currentUser.UserID)]);
           return;
         }
       } catch (error) {
         console.error('Error loading users from DynamoDB:', error);
+        // Continue to localStorage fallback - don't block app initialization
       }
 
       // Fallback to localStorage with default users
+      const savedUsers = localStorage.getItem('app_users');
+      if (savedUsers) {
+        try {
+          const parsedUsers = JSON.parse(savedUsers);
+          setUsers(parsedUsers);
+          return;
+        } catch (error) {
+          console.error('Error parsing saved users:', error);
+        }
+      }
+
+      // Final fallback to default users
       setUsers([
         currentUser,
         {
