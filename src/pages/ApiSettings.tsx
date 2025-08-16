@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Key, Book } from 'lucide-react';
 import ApiKeyManager from '@/components/ApiKeyManager';
 import ApiDocumentation from '@/components/ApiDocumentation';
-import { AwsCredentialManager } from '@/components/AwsCredentialManager';
+import { AwsCredentialSetup } from '@/components/AwsCredentialSetup';
 
 const ApiSettings: React.FC = () => {
   const navigate = useNavigate();
@@ -45,7 +45,7 @@ const ApiSettings: React.FC = () => {
             </TabsContent>
             
             <TabsContent value="aws" className="space-y-4">
-              <AwsCredentialManager />
+              <AwsCredentialSetup />
             </TabsContent>
             
             <TabsContent value="docs" className="space-y-4">

@@ -63,8 +63,17 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUsers([currentUser, ...formattedUsers.filter((u: any) => u.UserID !== currentUser.UserID)]);
           return;
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error loading users from DynamoDB:', error);
+        
+        // Check for specific AWS credential errors
+        if (error?.name === 'InvalidSignatureException') {
+          console.warn('⚠️ AWS credentials appear to be invalid. Please update your AWS Access Key and Secret Key in your .env file.');
+        } else if (error?.name === 'UnrecognizedClientException') {
+          console.warn('⚠️ AWS Access Key ID format is invalid. Please check your credentials.');
+        }
+        
+        console.log('⚠️ Falling back to localStorage authentication.');
         // Continue to localStorage fallback - don't block app initialization
       }
 
