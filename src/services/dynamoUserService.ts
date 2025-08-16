@@ -67,6 +67,21 @@ export const dynamoUserService = {
   },
 
   async getUserByEmail(email: string): Promise<User | null> {
+    // Check credentials before making DynamoDB call
+    const hasCredentials = !!(import.meta.env.VITE_AWS_ACCESS_KEY_ID && import.meta.env.VITE_AWS_SECRET_ACCESS_KEY);
+    if (!hasCredentials) {
+      console.warn('⚠️ AWS credentials not configured, skipping DynamoDB getUserByEmail call');
+      return null;
+    }
+
+    const accessKey = import.meta.env.VITE_AWS_ACCESS_KEY_ID;
+    const secretKey = import.meta.env.VITE_AWS_SECRET_ACCESS_KEY;
+    
+    if (!accessKey.startsWith('AKIA') || accessKey.length < 16 || secretKey.length < 32) {
+      console.warn('⚠️ Invalid AWS credentials format, skipping DynamoDB getUserByEmail call');
+      return null;
+    }
+
     try {
       const command = new ScanCommand({
         TableName: TABLE_NAME,
@@ -92,8 +107,24 @@ export const dynamoUserService = {
   },
 
   async getAllUsers(): Promise<User[]> {
-    if (!import.meta.env.VITE_AWS_ACCESS_KEY_ID || !import.meta.env.VITE_AWS_SECRET_ACCESS_KEY) {
+    // Check if AWS credentials are configured
+    const hasCredentials = !!(import.meta.env.VITE_AWS_ACCESS_KEY_ID && import.meta.env.VITE_AWS_SECRET_ACCESS_KEY);
+    if (!hasCredentials) {
       console.warn('⚠️ AWS credentials not configured, skipping DynamoDB call');
+      return [];
+    }
+    
+    // Validate credentials format
+    const accessKey = import.meta.env.VITE_AWS_ACCESS_KEY_ID;
+    const secretKey = import.meta.env.VITE_AWS_SECRET_ACCESS_KEY;
+    
+    if (!accessKey.startsWith('AKIA') || accessKey.length < 16) {
+      console.warn('⚠️ Invalid AWS Access Key format, skipping DynamoDB call');
+      return [];
+    }
+    
+    if (secretKey.length < 32) {
+      console.warn('⚠️ Invalid AWS Secret Key format, skipping DynamoDB call');
       return [];
     }
     

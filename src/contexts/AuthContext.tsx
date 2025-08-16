@@ -235,6 +235,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
       
+      // Create a fallback admin user if no users exist and credentials match
+      if (storedUsers.length === 0 && email === 'admin@company.com' && password === 'admin123') {
+        console.log('🔧 Creating fallback admin user...');
+        const adminUser = {
+          id: '1',
+          name: 'Admin User',
+          email: 'admin@company.com',
+          role: 'admin' as const,
+          mustChangePassword: true
+        };
+        
+        const hashedPassword = await hashPassword(password);
+        const newUsers = [adminUser];
+        const newCredentials = { '1': hashedPassword };
+        
+        localStorage.setItem('app_users', JSON.stringify(newUsers));
+        localStorage.setItem('user_credentials', JSON.stringify(newCredentials));
+        
+        setPendingPasswordChange(adminUser);
+        return { success: true, mustChangePassword: true, user: adminUser };
+      }
+      
+      
       console.log('🔧 Login failed - no matching user found');
       return { success: false };
     } catch (error) {
@@ -244,7 +267,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(false);
     }
   };
-
   const verifyTwoFactor = async (code: string, isBackupCode = false): Promise<boolean> => {
     if (!pendingTwoFactor) return false;
     
