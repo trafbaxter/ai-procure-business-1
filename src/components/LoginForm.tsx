@@ -167,7 +167,7 @@ const LoginForm = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <AwsCredentialsAlert show={showAwsAlert} />
+          {showAwsAlert && <AwsCredentialsAlert show={showAwsAlert} />}
           
           {loginError && (
             <>
