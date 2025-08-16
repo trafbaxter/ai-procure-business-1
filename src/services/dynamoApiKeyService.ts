@@ -1,15 +1,12 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand, PutCommand, DeleteCommand, UpdateCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
-import { DYNAMODB_CONFIG, isDynamoDBEnabled } from '@/config/dynamodb';
+import { DYNAMODB_CONFIG } from '@/config/dynamodb';
+import { getDynamoDBClientConfig } from '@/config/awsCredentials';
 
-const client = new DynamoDBClient({ 
-  region: DYNAMODB_CONFIG.region,
-  credentials: {
-    accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID || '',
-    secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY || ''
-  }
-});
-const docClient = DynamoDBDocumentClient.from(client);
+// Configure AWS DynamoDB client with centralized credentials
+const clientConfig = getDynamoDBClientConfig();
+const client = clientConfig ? new DynamoDBClient(clientConfig) : null;
+const docClient = client ? DynamoDBDocumentClient.from(client) : null;
 
 export interface ApiKey {
   KeyID: string;
@@ -25,7 +22,7 @@ const TABLE_NAME = import.meta.env.VITE_DYNAMODB_API_KEYS_TABLE || 'Procurement-
 
 export const dynamoApiKeyService = {
   async getApiKey(KeyID: string): Promise<ApiKey | null> {
-    if (!isDynamoDBEnabled()) return null;
+    if (!docClient) return null;
     
     try {
       const result = await docClient.send(new ScanCommand({
@@ -43,7 +40,7 @@ export const dynamoApiKeyService = {
   },
 
   async getAllApiKeys(): Promise<ApiKey[]> {
-    if (!isDynamoDBEnabled()) return [];
+    if (!docClient) return [];
     
     try {
       const result = await docClient.send(new ScanCommand({
@@ -57,7 +54,7 @@ export const dynamoApiKeyService = {
   },
 
   async createApiKey(apiKey: ApiKey): Promise<boolean> {
-    if (!isDynamoDBEnabled()) return false;
+    if (!docClient) return false;
     
     try {
       await docClient.send(new PutCommand({
@@ -72,7 +69,7 @@ export const dynamoApiKeyService = {
   },
 
   async updateApiKey(KeyID: string, updates: Partial<ApiKey>): Promise<boolean> {
-    if (!isDynamoDBEnabled()) return false;
+    if (!docClient) return false;
     
     try {
       const updateExpression = Object.keys(updates).map(key => `#${key} = :${key}`).join(', ');
@@ -100,7 +97,7 @@ export const dynamoApiKeyService = {
   },
 
   async deleteApiKey(KeyID: string): Promise<boolean> {
-    if (!isDynamoDBEnabled()) return false;
+    if (!docClient) return false;
     
     try {
       await docClient.send(new DeleteCommand({

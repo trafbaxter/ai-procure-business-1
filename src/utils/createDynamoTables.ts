@@ -1,18 +1,14 @@
 import { DynamoDBClient, CreateTableCommand, DescribeTableCommand } from '@aws-sdk/client-dynamodb';
+import { getDynamoDBClientConfig } from '@/config/awsCredentials';
 
-const client = new DynamoDBClient({
-  region: import.meta.env.VITE_AWS_REGION || 'us-east-1',
-  credentials: {
-    accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID || '',
-    secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY || '',
-  },
-});
-
+// Configure AWS DynamoDB client with centralized credentials
+const clientConfig = getDynamoDBClientConfig();
+const client = clientConfig ? new DynamoDBClient(clientConfig) : null;
 export async function createUsersTable(): Promise<boolean> {
+  if (!client) return false;
   const tableName = import.meta.env.VITE_DYNAMODB_USERS_TABLE || 'Procurement-Users';
   
   try {
-    // Check if table exists
     try {
       await client.send(new DescribeTableCommand({ TableName: tableName }));
       console.log(`✅ Table ${tableName} already exists`);
@@ -44,6 +40,7 @@ export async function createUsersTable(): Promise<boolean> {
 }
 
 export async function createApiKeysTable(): Promise<boolean> {
+  if (!client) return false;
   const tableName = import.meta.env.VITE_DYNAMODB_API_KEYS_TABLE || 'Procurement-ApiKeys';
   
   try {
@@ -57,12 +54,8 @@ export async function createApiKeysTable(): Promise<boolean> {
 
     const command = new CreateTableCommand({
       TableName: tableName,
-      KeySchema: [
-        { AttributeName: 'KeyID', KeyType: 'HASH' }
-      ],
-      AttributeDefinitions: [
-        { AttributeName: 'KeyID', AttributeType: 'S' }
-      ],
+      KeySchema: [{ AttributeName: 'KeyID', KeyType: 'HASH' }],
+      AttributeDefinitions: [{ AttributeName: 'KeyID', AttributeType: 'S' }],
       BillingMode: 'PAY_PER_REQUEST'
     });
 
@@ -76,6 +69,7 @@ export async function createApiKeysTable(): Promise<boolean> {
 }
 
 export async function createSessionsTable(): Promise<boolean> {
+  if (!client) return false;
   const tableName = import.meta.env.VITE_DYNAMODB_SESSIONS_TABLE || 'Procurement-Sessions';
   
   try {
@@ -89,12 +83,8 @@ export async function createSessionsTable(): Promise<boolean> {
 
     const command = new CreateTableCommand({
       TableName: tableName,
-      KeySchema: [
-        { AttributeName: 'SessionID', KeyType: 'HASH' }
-      ],
-      AttributeDefinitions: [
-        { AttributeName: 'SessionID', AttributeType: 'S' }
-      ],
+      KeySchema: [{ AttributeName: 'SessionID', KeyType: 'HASH' }],
+      AttributeDefinitions: [{ AttributeName: 'SessionID', AttributeType: 'S' }],
       BillingMode: 'PAY_PER_REQUEST'
     });
 
@@ -108,6 +98,10 @@ export async function createSessionsTable(): Promise<boolean> {
 }
 
 export async function createAllTables(): Promise<void> {
+  if (!client) {
+    console.warn('⚠️ DynamoDB client not configured, skipping table creation');
+    return;
+  }
   console.log('🔧 Creating DynamoDB tables...');
   await createUsersTable();
   await createApiKeysTable();

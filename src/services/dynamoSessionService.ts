@@ -1,15 +1,12 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand, PutCommand, DeleteCommand, UpdateCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
-import { DYNAMODB_CONFIG, isDynamoDBEnabled } from '@/config/dynamodb';
+import { DYNAMODB_CONFIG } from '@/config/dynamodb';
+import { getDynamoDBClientConfig } from '@/config/awsCredentials';
 
-const client = new DynamoDBClient({ 
-  region: DYNAMODB_CONFIG.region,
-  credentials: {
-    accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID || '',
-    secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY || ''
-  }
-});
-const docClient = DynamoDBDocumentClient.from(client);
+// Configure AWS DynamoDB client with centralized credentials
+const clientConfig = getDynamoDBClientConfig();
+const client = clientConfig ? new DynamoDBClient(clientConfig) : null;
+const docClient = client ? DynamoDBDocumentClient.from(client) : null;
 
 export interface Session {
   SessionID: string;
@@ -21,7 +18,7 @@ export interface Session {
 
 export const dynamoSessionService = {
   async getSession(SessionID: string): Promise<Session | null> {
-    if (!isDynamoDBEnabled()) return null;
+    if (!docClient) return null;
     
     try {
       const result = await docClient.send(new ScanCommand({
@@ -39,7 +36,7 @@ export const dynamoSessionService = {
   },
 
   async createSession(session: Session): Promise<boolean> {
-    if (!isDynamoDBEnabled()) return false;
+    if (!docClient) return false;
     
     try {
       await docClient.send(new PutCommand({
@@ -54,7 +51,7 @@ export const dynamoSessionService = {
   },
 
   async deleteSession(SessionID: string): Promise<boolean> {
-    if (!isDynamoDBEnabled()) return false;
+    if (!docClient) return false;
     
     try {
       await docClient.send(new DeleteCommand({
@@ -69,7 +66,7 @@ export const dynamoSessionService = {
   },
 
   async updateSession(SessionID: string, updates: Partial<Session>): Promise<boolean> {
-    if (!isDynamoDBEnabled()) return false;
+    if (!docClient) return false;
     
     try {
       const updateExpression = Object.keys(updates).map(key => `#${key} = :${key}`).join(', ');
