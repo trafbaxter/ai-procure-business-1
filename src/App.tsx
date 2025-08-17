@@ -16,6 +16,7 @@ import { UserManagement } from "./pages/UserManagement";
 import SecuritySettings from "./pages/SecuritySettings";
 import NotFound from "./pages/NotFound";
 import CredentialDebug from "./pages/CredentialDebug";
+import { CredentialFixGuide } from "@/components/CredentialFixGuide";
 import { CredentialStatus } from "@/components/CredentialStatus";
 import { AwsCredentialsAlert } from "@/components/AwsCredentialsAlert";
 import { CredentialDiagnostic } from "@/components/CredentialDiagnostic";
@@ -57,6 +58,7 @@ const App = () => (
                   </ProtectedRoute>
                 } />
                 <Route path="/debug/credentials" element={<CredentialDebug />} />
+                <Route path="/fix/credentials" element={<CredentialFixGuide />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

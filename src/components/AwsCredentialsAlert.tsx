@@ -28,6 +28,15 @@ export const AwsCredentialsAlert: React.FC = () => {
                 size="sm" 
                 variant="outline" 
                 className="bg-white hover:bg-gray-50"
+                onClick={() => window.open('/fix/credentials', '_self')}
+              >
+                <ExternalLink className="h-3 w-3 mr-1" />
+                Fix Credentials
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="bg-white hover:bg-gray-50"
                 onClick={() => window.open('/api-settings', '_self')}
               >
                 <ExternalLink className="h-3 w-3 mr-1" />
