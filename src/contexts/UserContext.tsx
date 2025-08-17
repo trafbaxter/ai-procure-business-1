@@ -69,8 +69,18 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Check for specific AWS credential errors
         if (error?.name === 'InvalidSignatureException') {
           console.warn('⚠️ AWS credentials appear to be invalid. Please update your AWS Access Key and Secret Key in your .env file.');
+          toast({ 
+            title: 'AWS Credentials Error', 
+            description: 'Invalid AWS credentials detected. Please check your .env file.',
+            variant: 'destructive'
+          });
         } else if (error?.name === 'UnrecognizedClientException') {
           console.warn('⚠️ AWS Access Key ID format is invalid. Please check your credentials.');
+          toast({ 
+            title: 'AWS Configuration Error', 
+            description: 'Invalid AWS Access Key format. Please verify your credentials.',
+            variant: 'destructive'
+          });
         }
         
         console.log('⚠️ Falling back to localStorage authentication.');

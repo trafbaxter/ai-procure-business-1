@@ -15,7 +15,11 @@ import ApiSettings from "./pages/ApiSettings";
 import { UserManagement } from "./pages/UserManagement";
 import SecuritySettings from "./pages/SecuritySettings";
 import NotFound from "./pages/NotFound";
-
+import CredentialDebug from "./pages/CredentialDebug";
+import { CredentialStatus } from "@/components/CredentialStatus";
+import { AwsCredentialsAlert } from "@/components/AwsCredentialsAlert";
+import { CredentialDiagnostic } from "@/components/CredentialDiagnostic";
+import { getAwsCredentials } from "@/config/awsCredentials";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -27,6 +31,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <SessionTimeout />
+            <AwsCredentialsAlert />
             <BrowserRouter>
               <Routes>
                 <Route path="/login" element={<LoginForm />} />
@@ -51,6 +56,7 @@ const App = () => (
                     <SecuritySettings />
                   </ProtectedRoute>
                 } />
+                <Route path="/debug/credentials" element={<CredentialDebug />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
