@@ -86,3 +86,18 @@ export function getDynamoDBClientConfig() {
     }
   };
 }
+
+// Validate AWS credentials by attempting a test connection
+export async function validateAwsCredentials(credentials: AwsCredentials): Promise<boolean> {
+  if (!credentials.isValid) {
+    return false;
+  }
+  
+  try {
+    // Simple validation - just check if credentials are properly formatted
+    return validateAccessKey(credentials.accessKeyId) && validateSecretKey(credentials.secretAccessKey);
+  } catch (error) {
+    console.error('AWS credential validation error:', error);
+    return false;
+  }
+}

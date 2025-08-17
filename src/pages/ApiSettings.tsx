@@ -4,10 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Key, Book } from 'lucide-react';
+import { ArrowLeft, Key, Book, Settings } from 'lucide-react';
 import ApiKeyManager from '@/components/ApiKeyManager';
 import ApiDocumentation from '@/components/ApiDocumentation';
 import { AwsCredentialSetup } from '@/components/AwsCredentialSetup';
+import { AwsSetupWizard } from '@/components/AwsSetupWizard';
 
 const ApiSettings: React.FC = () => {
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ const ApiSettings: React.FC = () => {
           </div>
           
           <Tabs defaultValue="keys" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="keys" className="flex items-center gap-2">
                 <Key className="w-4 h-4" />
                 API Keys
@@ -37,6 +38,10 @@ const ApiSettings: React.FC = () => {
               <TabsTrigger value="docs" className="flex items-center gap-2">
                 <Book className="w-4 h-4" />
                 Documentation
+              </TabsTrigger>
+              <TabsTrigger value="setup" className="flex items-center gap-2">
+                <Settings className="w-4 h-4" />
+                Setup Wizard
               </TabsTrigger>
             </TabsList>
             
@@ -50,6 +55,10 @@ const ApiSettings: React.FC = () => {
             
             <TabsContent value="docs" className="space-y-4">
               <ApiDocumentation />
+            </TabsContent>
+            
+            <TabsContent value="setup" className="space-y-4">
+              <AwsSetupWizard />
             </TabsContent>
           </Tabs>
         </div>
