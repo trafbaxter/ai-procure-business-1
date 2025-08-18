@@ -7,8 +7,8 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Key, Book, Settings } from 'lucide-react';
 import ApiKeyManager from '@/components/ApiKeyManager';
 import ApiDocumentation from '@/components/ApiDocumentation';
-import { AwsCredentialSetup } from '@/components/AwsCredentialSetup';
-import { AwsSetupWizard } from '@/components/AwsSetupWizard';
+// import { AwsCredentialSetup } from '@/components/AwsCredentialSetup';
+// import { AwsSetupWizard } from '@/components/AwsSetupWizard';
 
 const ApiSettings: React.FC = () => {
   const navigate = useNavigate();

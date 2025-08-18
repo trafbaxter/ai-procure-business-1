@@ -9,7 +9,7 @@ import { Loader2, AlertCircle, Shield, UserPlus } from 'lucide-react';
 import ForgotPasswordDialog from './ForgotPasswordDialog';
 import ChangePasswordForm from './ChangePasswordForm';
 import { RegisterForm } from './RegisterForm';
-import { AwsCredentialsAlert } from './AwsCredentialsAlert';
+// import { AwsCredentialsAlert } from './AwsCredentialsAlert';
 const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,19 +20,19 @@ const LoginForm = () => {
   const { login, verifyTwoFactor, isLoading, pendingPasswordChange, pendingTwoFactor, loginError, clearLoginError } = useAuth();
 
   // Check for AWS credential issues and show alert
-  useEffect(() => {
-    const checkAwsCredentials = () => {
-      const hasCredentials = !!(import.meta.env.VITE_AWS_ACCESS_KEY_ID && import.meta.env.VITE_AWS_SECRET_ACCESS_KEY);
-      const accessKey = import.meta.env.VITE_AWS_ACCESS_KEY_ID;
-      const secretKey = import.meta.env.VITE_AWS_SECRET_ACCESS_KEY;
+  // useEffect(() => {
+  //   const checkAwsCredentials = () => {
+  //     const hasCredentials = !!(import.meta.env.VITE_AWS_ACCESS_KEY_ID && import.meta.env.VITE_AWS_SECRET_ACCESS_KEY);
+  //     const accessKey = import.meta.env.VITE_AWS_ACCESS_KEY_ID;
+  //     const secretKey = import.meta.env.VITE_AWS_SECRET_ACCESS_KEY;
       
-      if (hasCredentials && (!accessKey.startsWith('AKIA') || accessKey.length < 16 || secretKey.length < 32)) {
-        setShowAwsAlert(true);
-      }
-    };
+  //     if (hasCredentials && (!accessKey.startsWith('AKIA') || accessKey.length < 16 || secretKey.length < 32)) {
+  //       setShowAwsAlert(true);
+  //     }
+  //   };
     
-    checkAwsCredentials();
-  }, []);
+  //   checkAwsCredentials();
+  // }, []);
 
   // If there's a pending password change, show the change password form
   if (pendingPasswordChange) {
@@ -167,7 +167,7 @@ const LoginForm = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {showAwsAlert && <AwsCredentialsAlert show={showAwsAlert} />}
+          {/* {showAwsAlert && <AwsCredentialsAlert show={showAwsAlert} />} */}
           
           {loginError && (
             <>
