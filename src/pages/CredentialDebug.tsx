@@ -1,4 +1,6 @@
 import { CredentialDiagnostic } from "@/components/CredentialDiagnostic";
+import { AdvancedCredentialDiagnostic } from "@/components/AdvancedCredentialDiagnostic";
+import { CredentialTestTool } from "@/components/CredentialTestTool";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function CredentialDebug() {
@@ -12,6 +14,10 @@ export default function CredentialDebug() {
       </div>
       
       <CredentialDiagnostic />
+      
+      <AdvancedCredentialDiagnostic />
+      
+      <CredentialTestTool />
       
       <Card>
         <CardHeader>
